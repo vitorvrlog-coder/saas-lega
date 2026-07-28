@@ -8,3 +8,8 @@ __pycache__/
 *.pyc
 .bash_history
 .gitignore~
+.bash_logout
+.bash_profile
+.bashrc
+certbot/logs/
+certbot/run*.log
