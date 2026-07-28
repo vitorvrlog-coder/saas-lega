@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+sqlalchemy>=2.0
+asyncpg
+psycopg2-binary
+alembic
+pydantic
+pydantic-settings
+httpx
+python-dotenv
+anthropic
+apscheduler
+jinja2
+itsdangerous
+python-multipart
+bcrypt
+openpyxl

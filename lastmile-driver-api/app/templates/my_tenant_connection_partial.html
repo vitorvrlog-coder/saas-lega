@@ -1,0 +1,12 @@
+{% if error %}
+<div>
+    <p style="color: var(--pico-del-color)">{{ error }}</p>
+    <p class="muted">Confira se o phone_number_id e o access_token cadastrados pra este tenant ainda são válidos no Meta Business Manager.</p>
+</div>
+{% else %}
+<div>
+    <p class="badge badge-success">WhatsApp Business ativo</p>
+    <p class="muted">Número verificado: {{ status.get('verified_name') or '—' }}</p>
+    <p class="muted">Qualidade: {{ status.get('quality_rating') or '—' }}</p>
+</div>
+{% endif %}

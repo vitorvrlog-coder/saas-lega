@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Visão geral — Heimdall Logtech{% endblock %}
+{% block content %}
+
+<div class="hero">
+    <div>
+        <h1>Visão geral</h1>
+        <p class="muted">Acompanhamento das ocorrências de insucesso de entrega em tempo real.</p>
+    </div>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-bubble stat-amber">
+        <span class="stat-icon">📋</span>
+        <span class="stat-text">
+            <span class="stat-value" data-count="{{ stats.pending_human_queue }}">0</span>
+            <span class="stat-label">Aguardando fila humana</span>
+        </span>
+    </div>
+    <div class="stat-bubble stat-blue">
+        <span class="stat-icon">💬</span>
+        <span class="stat-text">
+            <span class="stat-value" data-count="{{ stats.awaiting_customer_reply }}">0</span>
+            <span class="stat-label">Aguardando resposta do cliente</span>
+        </span>
+    </div>
+    <div class="stat-bubble stat-red">
+        <span class="stat-icon">⚠️</span>
+        <span class="stat-text">
+            <span class="stat-value" data-count="{{ stats.escalated_open }}">0</span>
+            <span class="stat-label">Escalado (precisa de atenção)</span>
+        </span>
+    </div>
+    <div class="stat-bubble stat-green">
+        <span class="stat-icon">✅</span>
+        <span class="stat-text">
+            <span class="stat-value" data-count="{{ stats.resolved_today }}">0</span>
+            <span class="stat-label">Resolvido hoje</span>
+        </span>
+    </div>
+    <div class="stat-bubble stat-gray">
+        <span class="stat-icon">✖️</span>
+        <span class="stat-text">
+            <span class="stat-value" data-count="{{ stats.failed_today }}">0</span>
+            <span class="stat-label">Insucesso definitivo hoje</span>
+        </span>
+    </div>
+    <div class="stat-bubble stat-gold">
+        <span class="stat-icon">📦</span>
+        <span class="stat-text">
+            <span class="stat-value" data-count="{{ stats.total_today }}">0</span>
+            <span class="stat-label">Ocorrências hoje</span>
+        </span>
+    </div>
+</div>
+
+<div class="chart-grid">
+    <article>
+        <h4>Volume de ocorrências — últimos 14 dias</h4>
+        <canvas id="dailyChart" height="110"></canvas>
+    </article>
+    <article>
+        <h4>Motivos de insucesso</h4>
+        {% if stats.reason_labels %}
+        <canvas id="reasonChart" height="110"></canvas>
+        {% else %}
+        <p class="muted">Sem dados suficientes ainda.</p>
+        {% endif %}
+    </article>
+</div>
+
+<script>
+// Contagem animada dos balões — só efeito visual, não afeta o valor real.
+(function () {
+    document.querySelectorAll(".stat-value[data-count]").forEach(function (el) {
+        var target = parseInt(el.getAttribute("data-count"), 10) || 0;
+        var duration = 600;
+        var start = null;
+
+        function step(timestamp) {
+            if (!start) start = timestamp;
+            var progress = Math.min((timestamp - start) / duration, 1);
+            el.textContent = Math.round(progress * target);
+            if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    });
+})();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+(function () {
+    var goldA = "#c9a24b";
+    var textColor = getComputedStyle(document.documentElement).getPropertyValue("--pico-color");
+    var gridColor = getComputedStyle(document.documentElement).getPropertyValue("--pico-muted-border-color");
+
+    new Chart(document.getElementById("dailyChart"), {
+        type: "bar",
+        data: {
+            labels: {{ stats.daily_labels | tojson }},
+            datasets: [{
+                label: "Ocorrências",
+                data: {{ stats.daily_counts | tojson }},
+                backgroundColor: goldA,
+                borderRadius: 4,
+                maxBarThickness: 28,
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: textColor }, grid: { display: false } },
+                y: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }
+            }
+        }
+    });
+
+    {% if stats.reason_labels %}
+    new Chart(document.getElementById("reasonChart"), {
+        type: "doughnut",
+        data: {
+            labels: {{ stats.reason_labels | tojson }},
+            datasets: [{
+                data: {{ stats.reason_counts | tojson }},
+                backgroundColor: ["#c9a24b", "#8a97a8", "#5b7fa6", "#a65b5b", "#6b8a5b"],
+            }]
+        },
+        options: {
+            plugins: { legend: { position: "bottom", labels: { color: textColor } } }
+        }
+    });
+    {% endif %}
+})();
+</script>
+{% endblock %}

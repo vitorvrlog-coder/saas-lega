@@ -1,0 +1,296 @@
+/* Heimdall Motorista — site do produto low-ticket (app de nota fiscal +
+   adesão paga R$35/mês). Estrutura reaproveitada de ../marketing-site/
+   (que já validamos funcionar bem), paleta trocada pra azul-marinho/âmbar
+   do próprio app Android (ver android-app/.../ui/theme/Color.kt) em vez do
+   dourado do site enterprise — produtos e públicos diferentes, não deve
+   parecer o mesmo site. */
+
+:root {
+    --navy: #13315C;
+    --navy-light: #4A6D9E;
+    --navy-dark: #0A1E3D;
+    --amber: #E8A33D;
+    --amber-bright: #F5C778;
+    --amber-dim: #B8791C;
+    --black: #060607;
+    --card-bg: #0f1926;
+    --card-bg-soft: rgba(15, 25, 38, 0.7);
+    --ink: #f5f6f8;
+    --ink-soft: #c7cbd4;
+    --muted: #8b93a3;
+    --border: rgba(232, 163, 61, 0.25);
+    --border-soft: rgba(255, 255, 255, 0.08);
+    --radius: 20px;
+    --font-display: "Space Grotesk", system-ui, sans-serif;
+    --glow-shadow: 0 0 60px rgba(232, 163, 61, 0.28), 0 0 140px rgba(19, 49, 92, 0.35);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--ink-soft);
+    background-color: var(--black);
+    background-image:
+        radial-gradient(circle at 15% -10%, rgba(19, 49, 92, 0.45), transparent 45%),
+        radial-gradient(circle at 100% 10%, rgba(232, 163, 61, 0.1), transparent 40%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    padding-top: 5.5rem;
+    overflow-x: hidden;
+}
+
+h1, h2, h3 { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.02em; line-height: 1.06; margin: 0 0 0.5rem; color: var(--ink); }
+p { margin: 0 0 1rem; color: var(--muted); }
+a { color: var(--amber); }
+a:hover { color: var(--amber-bright); }
+
+.container { max-width: 1120px; margin: 0 auto; padding: 0 1.5rem; }
+
+/* --- Header --- */
+.site-header {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: rgba(6, 6, 7, 0.72);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    border-bottom: 1px solid var(--border-soft);
+    padding: 0.7rem 0; z-index: 30;
+}
+.site-header .container { display: flex; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 0.9rem; text-decoration: none; }
+.heimdall-emblem {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    border-radius: 999px; border: 2px solid var(--amber);
+    background: var(--navy-dark);
+    box-shadow: 0 0 0 3px rgba(232, 163, 61, 0.1), 0 4px 18px rgba(232, 163, 61, 0.25);
+    padding: 0.5rem;
+}
+.heimdall-emblem img { width: 100%; height: 100%; object-fit: contain; filter: invert(1); }
+.heimdall-emblem--header { width: 4rem; height: 4rem; border-width: 3px; }
+.heimdall-emblem--hero { width: 5.2rem; height: 5.2rem; border-width: 3px; padding: 0.9rem; box-shadow: var(--glow-shadow); }
+.heimdall-emblem--footer { width: 2.2rem; height: 2.2rem; padding: 0.3rem; }
+
+.brand-name { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; color: var(--amber); letter-spacing: 0.03em; }
+.brand-name small { display: block; font-weight: 500; font-size: 0.6rem; letter-spacing: 0.2em; color: var(--muted); }
+
+.nav-links { display: flex; align-items: center; gap: 0.25rem; list-style: none; margin: 0; padding: 0; }
+.nav-links > li > a:not(.btn) {
+    padding: 0.45rem 0.85rem; border-radius: 999px; color: var(--ink-soft); text-decoration: none;
+    font-size: 0.9rem; font-weight: 500; transition: background-color 0.15s ease, color 0.15s ease; white-space: nowrap;
+}
+.nav-links > li > a:not(.btn):hover { background: rgba(232, 163, 61, 0.12); color: var(--amber-bright); }
+.nav-toggle { display: none; background: none; border: 1px solid var(--border-soft); color: var(--ink); border-radius: 8px; width: 2.3rem; height: 2.3rem; cursor: pointer; font-size: 1.1rem; }
+
+/* --- Botão CTA --- */
+.btn {
+    display: inline-flex; align-items: center; gap: 0.9rem;
+    padding: 0.4rem 0.4rem 0.4rem 1.4rem; border-radius: 999px;
+    font-weight: 700; font-size: 0.92rem; text-decoration: none;
+    border: 2px solid transparent; cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    white-space: nowrap;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn-primary { border-color: var(--amber); color: var(--amber-bright); background: rgba(232, 163, 61, 0.06); }
+.btn-primary .btn-icon {
+    width: 2.4rem; height: 2.4rem; border-radius: 999px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--amber-bright), var(--amber));
+    color: #2e1c00; display: inline-flex; align-items: center; justify-content: center; font-weight: 800;
+}
+.btn-primary:hover { box-shadow: var(--glow-shadow); border-color: var(--amber-bright); }
+.btn-ghost { border-color: var(--border-soft); color: var(--ink); padding: 0.65rem 1.3rem; }
+.btn-ghost:hover { border-color: var(--amber); color: var(--amber-bright); }
+
+section { position: relative; padding: 6rem 0; }
+.section-alt { background: rgba(19, 49, 92, 0.15); border-top: 1px solid var(--border-soft); border-bottom: 1px solid var(--border-soft); }
+
+/* --- Entrada animada --- */
+.intro-in { opacity: 0; transform: translateY(22px); animation: heimdall-intro-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+@keyframes heimdall-intro-in { to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .intro-in { animation: none; opacity: 1; transform: none; } }
+
+/* --- Hero --- */
+.hero-section { padding: 6rem 0 7rem; overflow: visible; position: relative; }
+.hero-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 3.5rem; align-items: center; text-align: left; position: relative; z-index: 1; }
+.hero-copy .heimdall-emblem--hero { margin: 0 0 1.75rem; }
+
+.eyebrow {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-size: 0.76rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--amber-bright); background: rgba(232, 163, 61, 0.1); border: 1px solid var(--border);
+    padding: 0.35rem 0.9rem 0.35rem 0.7rem; border-radius: 999px; margin-bottom: 1.75rem;
+}
+.eyebrow::before { content: ""; width: 0.45rem; height: 0.45rem; border-radius: 999px; background: var(--amber); box-shadow: 0 0 8px var(--amber); flex-shrink: 0; }
+
+.hero-copy h1 { font-size: clamp(2.4rem, 4.6vw, 3.8rem); letter-spacing: -0.03em; }
+.hero-copy h1 .hl { color: var(--amber); }
+.hero-copy .lead { max-width: 520px; margin: 1.5rem 0 2.25rem; font-size: 1.1rem; color: var(--ink-soft); }
+.hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: center; }
+.hero-note { font-size: 0.82rem; color: var(--muted); }
+
+.hero-visual { position: relative; }
+.hero-visual::before {
+    content: ""; position: absolute; top: 50%; left: 50%; width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(232, 163, 61, 0.28), transparent 70%);
+    transform: translate(-50%, -50%); filter: blur(20px); z-index: 0; pointer-events: none;
+}
+.phone-shell {
+    max-width: 330px; margin: 0 auto; position: relative; z-index: 1;
+    background: var(--navy-dark); border: 1px solid var(--border-soft); border-radius: 32px;
+    box-shadow: var(--glow-shadow), 0 30px 70px rgba(0, 0, 0, 0.55); overflow: hidden;
+    transform: perspective(1400px) rotateY(-9deg) rotateX(4deg);
+    transition: transform 0.4s ease;
+}
+.hero-visual:hover .phone-shell { transform: perspective(1400px) rotateY(-4deg) rotateX(2deg); }
+.phone-topbar {
+    background: linear-gradient(90deg, var(--amber-dim), var(--amber), var(--amber-dim));
+    padding: 0.9rem 1.1rem; display: flex; align-items: center; gap: 0.6rem;
+    color: #2e1c00; font-weight: 700; font-size: 0.9rem;
+}
+.phone-topbar .dot { width: 0.5rem; height: 0.5rem; border-radius: 999px; background: #2e1c00; opacity: 0.4; }
+.phone-body { min-height: 400px; padding: 1.5rem 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+.phone-step {
+    display: flex; align-items: center; gap: 0.9rem; padding: 0.9rem; border-radius: 14px;
+    background: rgba(232, 163, 61, 0.06); border: 1px solid var(--border-soft);
+}
+.phone-step .num {
+    width: 2.2rem; height: 2.2rem; flex-shrink: 0; border-radius: 999px;
+    background: rgba(232, 163, 61, 0.16); color: var(--amber-bright); font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display);
+}
+.phone-step .text strong { display: block; font-size: 0.86rem; color: var(--ink); }
+.phone-step .text span { font-size: 0.74rem; color: var(--muted); }
+.phone-step.done { border-color: rgba(74, 222, 128, 0.35); background: rgba(74, 222, 128, 0.06); }
+.phone-step.done .num { background: rgba(74, 222, 128, 0.18); color: #4ade80; }
+
+.hero-float-card {
+    position: absolute; left: -1.75rem; bottom: 3.25rem; z-index: 2;
+    background: var(--card-bg-soft);
+    backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid var(--border-soft); border-radius: 16px;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.5);
+    display: flex; align-items: center; gap: 0.7rem; padding: 0.85rem 1.1rem;
+    transform: rotate(-4deg); animation: heimdall-float 4.5s ease-in-out infinite;
+}
+.hero-float-card .icon {
+    width: 2.3rem; height: 2.3rem; flex-shrink: 0; border-radius: 999px;
+    background: rgba(74, 222, 128, 0.16); color: #4ade80;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 1.05rem;
+}
+.hero-float-card .text { display: flex; flex-direction: column; line-height: 1.25; }
+.hero-float-card .text strong { font-size: 0.86rem; color: var(--ink); }
+.hero-float-card .text span { font-size: 0.72rem; color: var(--muted); }
+@keyframes heimdall-float { 0%, 100% { transform: rotate(-4deg) translateY(0); } 50% { transform: rotate(-4deg) translateY(-8px); } }
+
+@media (max-width: 960px) {
+    .hero-grid { grid-template-columns: 1fr; text-align: center; }
+    .hero-copy .heimdall-emblem--hero { margin: 0 auto 1.75rem; }
+    .hero-copy .lead { margin-left: auto; margin-right: auto; }
+    .hero-actions { justify-content: center; }
+    .phone-shell { margin: 0 auto; transform: none; }
+    .hero-visual:hover .phone-shell { transform: none; }
+    .hero-float-card { display: none; }
+}
+
+/* --- Reveal ao rolar --- */
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s ease; }
+.reveal.in-view { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+
+/* --- Números grandes --- */
+.big-numbers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; text-align: center; }
+.big-number .value { font-family: var(--font-display); font-size: clamp(2rem, 4vw, 2.85rem); font-weight: 800; color: var(--amber); line-height: 1; }
+.big-number .label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.6rem; }
+
+/* --- Passos numerados --- */
+.section-head { text-align: center; max-width: 640px; margin: 0 auto 3rem; }
+.eyebrow-sm { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--amber-bright); margin-bottom: 0.75rem; }
+.eyebrow-sm::before { content: ""; width: 0.4rem; height: 0.4rem; border-radius: 999px; background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+.section-head h2 { font-size: clamp(1.7rem, 3.2vw, 2.3rem); }
+
+.numbered-steps { display: flex; flex-direction: column; gap: 0; max-width: 780px; margin: 0 auto; }
+.numbered-step { display: flex; align-items: flex-start; gap: 1.5rem; padding: 1.75rem 0; border-top: 1px solid var(--border-soft); }
+.numbered-steps .numbered-step:last-child { border-bottom: 1px solid var(--border-soft); }
+.numbered-step .num {
+    font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; color: var(--amber-bright);
+    flex-shrink: 0; width: 3.2rem; height: 3.2rem; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(232, 163, 61, 0.1); border: 1px solid var(--border);
+}
+.numbered-step .body h3 { font-size: 1.1rem; margin-bottom: 0.35rem; }
+.numbered-step .body p { margin: 0; font-size: 0.94rem; }
+
+/* --- Diferenciais --- */
+.diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1rem; }
+.diff-card {
+    padding: 1.6rem; border-radius: var(--radius); border: 1px solid var(--border-soft); background: var(--card-bg);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.diff-card:hover { box-shadow: 0 20px 44px rgba(0, 0, 0, 0.4), 0 0 30px rgba(232, 163, 61, 0.14); border-color: rgba(232, 163, 61, 0.4); }
+.diff-card .icon {
+    font-size: 1.4rem; margin-bottom: 0.9rem; display: inline-flex; align-items: center; justify-content: center;
+    width: 2.8rem; height: 2.8rem; border-radius: 999px; background: rgba(232, 163, 61, 0.12); border: 1px solid var(--border);
+}
+.diff-card h3 { font-size: 1rem; }
+.diff-card p { font-size: 0.88rem; margin: 0; }
+
+/* --- Preço (card único, plano simples) --- */
+.price-single { max-width: 420px; margin: 0 auto; }
+.price-card {
+    background: var(--card-bg); border: 1px solid var(--amber); border-radius: var(--radius); padding: 2.25rem;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    box-shadow: var(--glow-shadow), 0 14px 34px rgba(0, 0, 0, 0.4);
+}
+.price-card .tier-price { font-family: var(--font-display); font-size: 3rem; font-weight: 800; color: var(--ink); }
+.price-card .tier-price span { font-size: 1rem; font-weight: 500; color: var(--muted); }
+.price-card ul { list-style: none; padding: 0; margin: 1.5rem 0; text-align: left; width: 100%; }
+.price-card li { padding: 0.5rem 0; font-size: 0.94rem; color: var(--ink-soft); display: flex; gap: 0.6rem; }
+.price-card li::before { content: "✓"; color: var(--amber-bright); font-weight: 700; }
+.pricing-note { text-align: center; font-size: 0.85rem; color: var(--muted); margin-top: 2rem; }
+
+/* --- FAQ --- */
+.faq-list { max-width: 780px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.75rem; }
+.faq-item { background: var(--card-bg); border: 1px solid var(--border-soft); border-radius: 14px; padding: 0.3rem 1.4rem; transition: border-color 0.15s ease; }
+.faq-item[open] { border-color: rgba(232, 163, 61, 0.35); }
+.faq-item summary { cursor: pointer; padding: 1.1rem 0; font-weight: 700; color: var(--ink); list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after { content: "+"; font-size: 1.3rem; font-weight: 400; color: var(--amber); flex-shrink: 0; transition: transform 0.2s ease; }
+.faq-item[open] summary::after { transform: rotate(45deg); }
+.faq-item p { padding-bottom: 1.2rem; margin: 0; font-size: 0.94rem; }
+
+/* --- CTA final --- */
+.cta-band { text-align: center; padding: 1rem 0; position: relative; }
+.cta-band h2 { font-size: clamp(1.9rem, 3.8vw, 2.8rem); }
+.cta-band p { max-width: 500px; margin: 0 auto 2rem; }
+
+/* --- Footer --- */
+.site-footer { border-top: 1px solid var(--border-soft); padding: 2.5rem 0; margin-top: 2rem; }
+.footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.footer-brand { display: inline-flex; align-items: center; gap: 0.6rem; font-family: var(--font-display); font-weight: 600; font-size: 0.82rem; color: var(--amber); letter-spacing: 0.05em; }
+.footer-links { display: flex; gap: 1.25rem; list-style: none; padding: 0; margin: 0; }
+.footer-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; }
+.footer-links a:hover { color: var(--amber-bright); }
+
+/* --- Responsive --- */
+@media (max-width: 860px) {
+    .diff-grid { grid-template-columns: 1fr; }
+    .big-numbers { grid-template-columns: 1fr; gap: 1.5rem; }
+    .nav-toggle { display: inline-flex; align-items: center; justify-content: center; }
+    .nav-links {
+        position: fixed; inset: 4.2rem 1rem auto 1rem;
+        background: var(--card-bg); border: 1px solid var(--border-soft); border-radius: var(--radius);
+        flex-direction: column; align-items: stretch; padding: 1rem; gap: 0.5rem;
+        display: none; box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+    }
+    .nav-links.open { display: flex; }
+    .nav-links > li > a:not(.btn) { display: block; }
+    .heimdall-emblem--header { width: 3.2rem; height: 3.2rem; }
+    section { padding: 4.5rem 0; }
+}
+@media (max-width: 640px) {
+    .heimdall-emblem--hero { width: 4.4rem; height: 4.4rem; }
+}

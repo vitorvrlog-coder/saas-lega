@@ -1,0 +1,167 @@
+{% extends "backoffice_base.html" %}
+{% block title %}{{ tenant.name }} — Backoffice Heimdall{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+    <h2>{{ tenant.name }}</h2>
+    <div style="display:flex; gap:0.5rem; align-items:center;">
+        {% if tenant.is_active %}
+        <span class="badge badge-success">Ativo</span>
+        {% else %}
+        <span class="badge badge-muted">Inativo</span>
+        {% endif %}
+        <form method="post" action="/backoffice/tenants/{{ tenant.id }}/toggle-active" style="margin:0;">
+            <button type="submit" class="secondary outline">
+                {{ 'Desativar' if tenant.is_active else 'Ativar' }}
+            </button>
+        </form>
+        <form method="post" action="/backoffice/tenants/{{ tenant.id }}/delete" style="margin:0;"
+              onsubmit="return confirm('Remover definitivamente {{ tenant.name }}? Só é possível se o tenant nunca teve nenhuma ocorrência registrada. Essa ação não pode ser desfeita.');">
+            <button type="submit" class="contrast outline">Remover transportadora</button>
+        </form>
+    </div>
+</div>
+<p class="muted">Slug: {{ tenant.slug }} · Instância WhatsApp: {{ tenant.evolution_instance }}</p>
+
+{% if error %}<p style="color: var(--pico-del-color)">{{ error }}</p>{% endif %}
+
+<article>
+    <header><strong>Conexão WhatsApp</strong></header>
+    <div id="tenant-connection" hx-get="/backoffice/tenants/{{ tenant.id }}/connection" hx-trigger="load" hx-swap="innerHTML">
+        <p class="muted">Carregando status...</p>
+    </div>
+</article>
+
+<form method="post" action="/backoffice/tenants/{{ tenant.id }}">
+    <article>
+        <header><strong>Configuração operacional</strong></header>
+
+        <label for="name">Nome do tenant</label>
+        <input type="text" id="name" name="name" value="{{ tenant.name }}" required>
+
+        <label for="allowed_radius_km">Raio permitido para reendereçamento (km)</label>
+        <input type="number" id="allowed_radius_km" name="allowed_radius_km" step="0.1" min="0"
+               value="{{ tenant.allowed_radius_km }}" required>
+
+        <div class="grid">
+            <div>
+                <label for="timeout_attempt_1_minutes">Timeout tentativa 1 (minutos)</label>
+                <input type="number" id="timeout_attempt_1_minutes" name="timeout_attempt_1_minutes"
+                       min="1" value="{{ tenant.timeout_attempt_1_minutes }}" required>
+            </div>
+            <div>
+                <label for="timeout_attempt_2_minutes">Timeout tentativa 2 (minutos)</label>
+                <input type="number" id="timeout_attempt_2_minutes" name="timeout_attempt_2_minutes"
+                       min="1" value="{{ tenant.timeout_attempt_2_minutes }}" required>
+            </div>
+        </div>
+    </article>
+
+    <button type="submit">Salvar alterações</button>
+    <a href="/backoffice/tenants" role="button" class="secondary outline">Voltar</a>
+</form>
+
+<article>
+    <header><strong>Operadores</strong></header>
+    <p class="muted">Quem loga no dashboard e enxerga só as ocorrências deste tenant.</p>
+
+    {% if operators %}
+    <div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>E-mail</th>
+                <th>Papel</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for operator in operators %}
+            <tr>
+                <td>{{ operator.email }}</td>
+                <td>
+                    {% if operator.is_primary_admin %}
+                    <span class="badge badge-primary">Admin principal</span>
+                    {% elif operator.is_tenant_admin %}
+                    <span class="badge badge-progress">Admin do tenant</span>
+                    {% else %}
+                    <span class="muted">Operador</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if operator.is_active %}
+                    <span class="badge badge-success">Ativo</span>
+                    {% else %}
+                    <span class="badge badge-muted">Inativo</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <details class="dropdown row-actions">
+                        <summary role="button" class="secondary outline">Ações ▾</summary>
+                        <ul>
+                            <li>
+                                <form method="post" action="/backoffice/tenants/{{ tenant.id }}/users/{{ operator.id }}/toggle-primary-admin" style="margin:0;">
+                                    <button type="submit" class="secondary outline">
+                                        {{ 'Remover admin principal' if operator.is_primary_admin else 'Tornar admin principal' }}
+                                    </button>
+                                </form>
+                            </li>
+                            <li>
+                                <form method="post" action="/backoffice/tenants/{{ tenant.id }}/users/{{ operator.id }}/toggle-tenant-admin" style="margin:0;">
+                                    <button type="submit" class="secondary outline">
+                                        {{ 'Remover admin' if operator.is_tenant_admin else 'Tornar admin do tenant' }}
+                                    </button>
+                                </form>
+                            </li>
+                            <li>
+                                <form method="post" action="/backoffice/tenants/{{ tenant.id }}/users/{{ operator.id }}/toggle-active" style="margin:0;">
+                                    <button type="submit" class="secondary outline">
+                                        {{ 'Desativar' if operator.is_active else 'Ativar' }}
+                                    </button>
+                                </form>
+                            </li>
+                            <li>
+                                <form method="post" action="/backoffice/tenants/{{ tenant.id }}/users/{{ operator.id }}/reset-password" style="margin:0; display:flex; flex-wrap:wrap; gap:0.25rem;">
+                                    <input type="password" name="new_password" placeholder="Nova senha" minlength="8" required style="margin:0; flex:1 1 140px;">
+                                    <button type="submit" class="secondary outline">Redefinir</button>
+                                </form>
+                            </li>
+                            <li>
+                                <form method="post" action="/backoffice/tenants/{{ tenant.id }}/users/{{ operator.id }}/delete" style="margin:0;"
+                                      onsubmit="return confirm('Remover definitivamente {{ operator.email }}? Essa ação não pode ser desfeita.');">
+                                    <button type="submit" class="contrast outline">Remover</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </details>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="muted">Nenhum operador cadastrado ainda.</p>
+    {% endif %}
+
+    {% if user_error %}<p style="color: var(--pico-del-color)">{{ user_error }}</p>{% endif %}
+
+    <form method="post" action="/backoffice/tenants/{{ tenant.id }}/users">
+        <div class="grid">
+            <div>
+                <label for="operator_email">E-mail do novo operador</label>
+                <input type="email" id="operator_email" name="email" required autocapitalize="none" autocorrect="off" spellcheck="false">
+            </div>
+            <div>
+                <label for="operator_password">Senha</label>
+                <input type="password" id="operator_password" name="password" minlength="8" required>
+            </div>
+        </div>
+        <label for="operator_is_tenant_admin">
+            <input type="checkbox" id="operator_is_tenant_admin" name="is_tenant_admin" value="true">
+            Administrador do tenant (pode gerenciar os outros operadores deste tenant)
+        </label>
+        <button type="submit" class="secondary">Adicionar operador</button>
+    </form>
+</article>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "backoffice_base.html" %}
+{% block title %}Nova transportadora — Backoffice Heimdall{% endblock %}
+{% block content %}
+<h2>Novo tenant</h2>
+<p class="muted">
+    Ao salvar, uma instância de WhatsApp é criada automaticamente no gateway —
+    na tela seguinte você vai poder escanear o QR code pra conectar o número.
+</p>
+
+{% if error %}<p style="color: var(--pico-del-color)">{{ error }}</p>{% endif %}
+
+<form method="post" action="/backoffice/tenants/new">
+    <label for="name">Nome do tenant</label>
+    <input type="text" id="name" name="name" value="{{ values.get('name', '') }}" required>
+
+    <label for="slug">Slug (identificador único, minúsculo, sem espaços)</label>
+    <input type="text" id="slug" name="slug" value="{{ values.get('slug', '') }}"
+           pattern="[a-z0-9\-]+" placeholder="Ex: transportadora-xyz" required>
+
+    <label for="allowed_radius_km">Raio permitido para reendereçamento (km)</label>
+    <input type="number" id="allowed_radius_km" name="allowed_radius_km" step="0.1" min="0"
+           value="{{ values.get('allowed_radius_km', '2.0') }}" required>
+
+    <div class="grid">
+        <div>
+            <label for="timeout_attempt_1_minutes">Timeout tentativa 1 (minutos)</label>
+            <input type="number" id="timeout_attempt_1_minutes" name="timeout_attempt_1_minutes"
+                   min="1" value="{{ values.get('timeout_attempt_1_minutes', '30') }}" required>
+        </div>
+        <div>
+            <label for="timeout_attempt_2_minutes">Timeout tentativa 2 (minutos)</label>
+            <input type="number" id="timeout_attempt_2_minutes" name="timeout_attempt_2_minutes"
+                   min="1" value="{{ values.get('timeout_attempt_2_minutes', '60') }}" required>
+        </div>
+    </div>
+
+    <button type="submit">Criar tenant e provisionar WhatsApp</button>
+    <a href="/backoffice/tenants" role="button" class="secondary outline">Cancelar</a>
+</form>
+{% endblock %}

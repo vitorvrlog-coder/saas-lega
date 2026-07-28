@@ -1,0 +1,16 @@
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for driverapp.heimdall-logtech.com
+Hook '--manual-auth-hook' for driverapp.heimdall-logtech.com reported error code 1
+Hook '--manual-auth-hook' for driverapp.heimdall-logtech.com ran with error output:
+ Waiting for DNS propagation of _acme-challenge.driverapp.heimdall-logtech.com = 9oTqr2TMF2EIGgjQPdK93BFNmcoSyWkQdM6xT4JxBzU
+ Timed out waiting for DNS TXT record.
+
+Certbot failed to authenticate some domains (authenticator: manual). The Certificate Authority reported these problems:
+  Identifier: driverapp.heimdall-logtech.com
+  Type:   dns
+  Detail: DNS problem: NXDOMAIN looking up TXT for _acme-challenge.driverapp.heimdall-logtech.com - check that a DNS record exists for this domain
+
+Hint: The Certificate Authority failed to verify the DNS TXT records created by the --manual-auth-hook. Ensure that this hook is functioning correctly and that it waits a sufficient duration of time for DNS propagation. Refer to "certbot --help manual" and the Certbot User Guide.
+
+Some challenges have failed.
+Ask for help or search for solutions at https://community.letsencrypt.org. See the logfile /var/log/letsencrypt/letsencrypt.log or re-run Certbot with -v for more details.

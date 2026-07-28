@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Histórico de chamadas — Heimdall Logtech{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+    <h2>Histórico de chamadas</h2>
+    {% if can_delete %}
+    <form method="post" action="/web/occurrences/clear-all" style="margin:0;"
+          onsubmit="return confirm('Excluir DEFINITIVAMENTE todo o histórico de chamadas deste tenant, incluindo todas as mensagens trocadas? Essa ação não pode ser desfeita.');">
+        <button type="submit" class="contrast outline">Limpar todo o histórico</button>
+    </form>
+    {% endif %}
+</div>
+
+<form method="get" action="/web/occurrences">
+    <div class="grid">
+        <div>
+            <label for="state">Estado</label>
+            <select id="state" name="state">
+                <option value="">Todos</option>
+                {% for s in states %}
+                <option value="{{ s.value }}" {% if selected_state == s.value %}selected{% endif %}>
+                    {{ s | state_label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="date_from">De</label>
+            <input type="date" id="date_from" name="date_from" value="{{ date_from }}">
+        </div>
+        <div>
+            <label for="date_to">Até</label>
+            <input type="date" id="date_to" name="date_to" value="{{ date_to }}">
+        </div>
+        <div>
+            <label for="show_archived">
+                <input type="checkbox" id="show_archived" name="show_archived" value="true" {% if show_archived %}checked{% endif %}>
+                Mostrar arquivadas
+            </label>
+        </div>
+    </div>
+    <button type="submit" class="secondary">Filtrar</button>
+    <a href="/web/occurrences" role="button" class="secondary outline">Limpar filtros</a>
+</form>
+
+{% if rows %}
+<div class="table-wrap">
+<table>
+    <thead>
+        <tr>
+            <th>Estado</th>
+            <th>Motorista</th>
+            <th>Cliente</th>
+            <th>Motivo</th>
+            <th>Tenant</th>
+            <th>Criado em</th>
+            <th></th>
+            <th></th>
+            {% if can_delete %}<th></th>{% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for occurrence, tenant in rows %}
+        <tr class="{{ 'muted' if occurrence.archived_at else '' }}">
+            <td><span class="badge {{ occurrence.state | state_badge_class }}">{{ occurrence.state | state_label }}</span></td>
+            <td>{{ occurrence.driver_phone }}</td>
+            <td>{{ occurrence.customer_phone or "—" }}</td>
+            <td>{{ occurrence.failure_reason.value if occurrence.failure_reason else "—" }}</td>
+            <td>{{ tenant.name }}</td>
+            <td class="muted">{{ occurrence.created_at | local_dt }}</td>
+            <td><a href="/web/occurrences/{{ occurrence.id }}">Ver</a></td>
+            <td>
+                {% if occurrence.archived_at %}
+                <form method="post" action="/web/occurrences/{{ occurrence.id }}/unarchive" style="margin:0;">
+                    <button type="submit" class="secondary outline">Desarquivar</button>
+                </form>
+                {% else %}
+                <form method="post" action="/web/occurrences/{{ occurrence.id }}/archive" style="margin:0;">
+                    <button type="submit" class="secondary outline">Arquivar</button>
+                </form>
+                {% endif %}
+            </td>
+            {% if can_delete %}
+            <td>
+                <form method="post" action="/web/occurrences/{{ occurrence.id }}/delete" style="margin:0;"
+                      onsubmit="return confirm('Excluir definitivamente esta chamada e todas as mensagens trocadas? Essa ação não pode ser desfeita.');">
+                    <button type="submit" class="contrast outline">Excluir</button>
+                </form>
+            </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<p>Nenhuma chamada encontrada.</p>
+{% endif %}
+{% endblock %}

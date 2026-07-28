@@ -1,0 +1,474 @@
+2026-07-11 20:38:28,966:DEBUG:certbot._internal.main:certbot version: 5.7.0
+2026-07-11 20:38:28,966:DEBUG:certbot._internal.main:Location of certbot entry point: /usr/local/bin/certbot
+2026-07-11 20:38:28,966:DEBUG:certbot._internal.main:Arguments: ['--manual', '--preferred-challenges', 'dns', '--manual-auth-hook', '/auth-hook.sh', '--agree-tos', '--no-eff-email', '-m', 'contato@heimdall-logtech.com', '--non-interactive', '-d', 'heimdall-logtech.com', '-d', 'www.heimdall-logtech.com']
+2026-07-11 20:38:28,966:DEBUG:certbot._internal.main:Discovered plugins: PluginsRegistry(PluginEntryPoint#manual,PluginEntryPoint#null,PluginEntryPoint#standalone,PluginEntryPoint#webroot)
+2026-07-11 20:38:28,978:DEBUG:certbot._internal.log:Root logging level set at 30
+2026-07-11 20:38:28,981:DEBUG:certbot._internal.plugins.selection:Requested authenticator manual and installer None
+2026-07-11 20:38:28,981:DEBUG:certbot._internal.plugins.selection:Single candidate plugin: * manual
+Description: Manual configuration or run your own shell scripts
+Interfaces: Authenticator, Plugin
+Entry point: EntryPoint(name='manual', value='certbot._internal.plugins.manual:Authenticator', group='certbot.plugins')
+Initialized: <certbot._internal.plugins.manual.Authenticator object at 0xffff91cdf8c0>
+Prep: True
+2026-07-11 20:38:28,981:DEBUG:certbot._internal.plugins.selection:Selected authenticator <certbot._internal.plugins.manual.Authenticator object at 0xffff91cdf8c0> and installer None
+2026-07-11 20:38:28,981:INFO:certbot._internal.plugins.selection:Plugins selected: Authenticator manual, Installer None
+2026-07-11 20:38:29,107:DEBUG:acme.client:Sending GET request to https://acme-v02.api.letsencrypt.org/directory.
+2026-07-11 20:38:29,109:DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): acme-v02.api.letsencrypt.org:443
+2026-07-11 20:38:29,607:DEBUG:urllib3.connectionpool:https://acme-v02.api.letsencrypt.org:443 "GET /directory HTTP/1.1" 200 961
+2026-07-11 20:38:29,607:DEBUG:acme.client:Received response:
+HTTP 200
+Server: nginx
+Date: Sat, 11 Jul 2026 20:38:29 GMT
+Content-Type: application/json
+Content-Length: 961
+Connection: keep-alive
+Cache-Control: public, max-age=0, no-cache
+X-Frame-Options: DENY
+Strict-Transport-Security: max-age=604800
+
+{
+  "cH10Q0Q80i4": "https://community.letsencrypt.org/t/adding-random-entries-to-the-directory/33417",
+  "keyChange": "https://acme-v02.api.letsencrypt.org/acme/key-change",
+  "meta": {
+    "caaIdentities": [
+      "letsencrypt.org"
+    ],
+    "profiles": {
+      "classic": "https://letsencrypt.org/docs/profiles#classic",
+      "shortlived": "https://letsencrypt.org/docs/profiles#shortlived",
+      "tlsserver": "https://letsencrypt.org/docs/profiles#tlsserver"
+    },
+    "termsOfService": "https://letsencrypt.org/documents/LE-SA-v1.8-July-06-2026.pdf",
+    "website": "https://letsencrypt.org"
+  },
+  "newAccount": "https://acme-v02.api.letsencrypt.org/acme/new-acct",
+  "newNonce": "https://acme-v02.api.letsencrypt.org/acme/new-nonce",
+  "newOrder": "https://acme-v02.api.letsencrypt.org/acme/new-order",
+  "renewalInfo": "https://acme-v02.api.letsencrypt.org/acme/renewal-info",
+  "revokeCert": "https://acme-v02.api.letsencrypt.org/acme/revoke-cert"
+}
+2026-07-11 20:38:29,608:DEBUG:acme.client:Requesting fresh nonce
+2026-07-11 20:38:29,608:DEBUG:acme.client:Sending HEAD request to https://acme-v02.api.letsencrypt.org/acme/new-nonce.
+2026-07-11 20:38:29,772:DEBUG:urllib3.connectionpool:https://acme-v02.api.letsencrypt.org:443 "HEAD /acme/new-nonce HTTP/1.1" 200 0
+2026-07-11 20:38:29,772:DEBUG:acme.client:Received response:
+HTTP 200
+Server: nginx
+Date: Sat, 11 Jul 2026 20:38:29 GMT
+Connection: keep-alive
+Cache-Control: public, max-age=0, no-cache
+Link: <https://acme-v02.api.letsencrypt.org/directory>;rel="index"
+Replay-Nonce: 9w0p0d3wCcknV_xjEh0bNQk01hjnVyCgi8Ahe6Lc7ejNk8rq4fQ
+X-Frame-Options: DENY
+Strict-Transport-Security: max-age=604800
+
+
+2026-07-11 20:38:29,772:DEBUG:acme.client:Storing nonce: 9w0p0d3wCcknV_xjEh0bNQk01hjnVyCgi8Ahe6Lc7ejNk8rq4fQ
+2026-07-11 20:38:29,773:DEBUG:acme.client:JWS payload:
+b'{\n  "contact": [\n    "mailto:contato@heimdall-logtech.com"\n  ],\n  "termsOfServiceAgreed": true\n}'
+2026-07-11 20:38:29,776:DEBUG:acme.client:Sending POST request to https://acme-v02.api.letsencrypt.org/acme/new-acct:
+{
+  "protected": "eyJhbGciOiAiUlMyNTYiLCAiandrIjogeyJuIjogInN3TloxeVp6Mk9ISUxnQlpNOW5sX1RvQ0J2X1RBUXlUa01GdllkMkF0Nm5OWC0xRGxCSXBSMkhWZzQ5WFAwWEhIWXN6S21IMHRzRHFBb1BPZ0VONnlsQmJXRmFQVHV4S3J2QzJCcDRpZGxNZmVNSGNSLTZPaHIxUFExVF95U1NnYWlHMUFNXzQ3MFNCZ1k1TUVtdnhadENCazVORXpUaFVBdEF6YlFqZmY4MUw2RExrQjM5a0E2TWZUQWVXQ3FDQ0x2a3FhUjhMTXdlMjVJT3RGaTZxazBWcnlQcXpSeWZpZGJ4V293ZXktTHZQdDNKRUdqQkI2enZYZTJ2QmVvbTdMWmpqZllzbTZ6aERORk1OSjhTVGQyQ0t4YkVpVnJGNlRRbHZqQjJFdzV6VF9fcmlYTy04Q0dybFEyM3pKQnRsVTB4WWswYnZ3c3FCLU5Sel9iSjdrdyIsICJlIjogIkFRQUIiLCAia3R5IjogIlJTQSJ9LCAibm9uY2UiOiAiOXcwcDBkM3dDY2tuVl94akVoMGJOUWswMWhqblZ5Q2dpOEFoZTZMYzdlak5rOHJxNGZRIiwgInVybCI6ICJodHRwczovL2FjbWUtdjAyLmFwaS5sZXRzZW5jcnlwdC5vcmcvYWNtZS9uZXctYWNjdCJ9",
+  "signature": "bTrPSfyHs1bhZFi_GXd0XjsuDP9u7c2AsqQTwDgOiwunpBEcnFMJqq6EcD27p_o471nFLarg8p9eguqHGJRKek7Sc5yu0aeygobBu_ijL7bSAYGJZexrGI4K7FIJs9rguzGawwUH_L82VaTOYcQxMO1CDwiJ3YqfgziHwZRXWGDFv9tX1_Jqo7CBfEuI684AAWVprIEK1OLW9Azz28qAT5wdldJKSiLZT3Y53TNPbdZcvCL3Ak3OTsRw4zhP2NP8_htoR-e3PusrIh2DtHC8IfX6wgv0xkHt7N4az8vA-HkSt20qmPCtkRGf6b9L7ZqDd2-UVnEj5Gqr_xZpzxDjlA",
+  "payload": "ewogICJjb250YWN0IjogWwogICAgIm1haWx0bzpjb250YXRvQGhlaW1kYWxsLWxvZ3RlY2guY29tIgogIF0sCiAgInRlcm1zT2ZTZXJ2aWNlQWdyZWVkIjogdHJ1ZQp9"
+}
+2026-07-11 20:38:29,999:DEBUG:urllib3.connectionpool:https://acme-v02.api.letsencrypt.org:443 "POST /acme/new-acct HTTP/1.1" 201 477
+2026-07-11 20:38:30,000:DEBUG:acme.client:Received response:
+HTTP 201
+Server: nginx
+Date: Sat, 11 Jul 2026 20:38:29 GMT
+Content-Type: application/json
+Content-Length: 477
+Connection: keep-alive
+Boulder-Requester: 3524695626
+Cache-Control: public, max-age=0, no-cache
+Link: <https://acme-v02.api.letsencrypt.org/directory>;rel="index", <https://letsencrypt.org/documents/LE-SA-v1.8-July-06-2026.pdf>;rel="terms-of-service"
+Location: https://acme-v02.api.letsencrypt.org/acme/acct/3524695626
+Replay-Nonce: tgKU1SCRWLI7ewz9_CmsVCxe7haP0BlurANI0E4xmdEq3sgnhHk
+X-Frame-Options: DENY
+Strict-Transport-Security: max-age=604800
+
+{
+  "key": {
+    "kty": "RSA",
+    "n": "swNZ1yZz2OHILgBZM9nl_ToCBv_TAQyTkMFvYd2At6nNX-1DlBIpR2HVg49XP0XHHYszKmH0tsDqAoPOgEN6ylBbWFaPTuxKrvC2Bp4idlMfeMHcR-6Ohr1PQ1T_ySSgaiG1AM_470SBgY5MEmvxZtCBk5NEzThUAtAzbQjff81L6DLkB39kA6MfTAeWCqCCLvkqaR8LMwe25IOtFi6qk0VryPqzRyfidbxWowey-LvPt3JEGjBB6zvXe2vBeom7LZjjfYsm6zhDNFMNJ8STd2CKxbEiVrF6TQlvjB2Ew5zT__riXO-8CGrlQ23zJBtlU0xYk0bvwsqB-NRz_bJ7kw",
+    "e": "AQAB"
+  },
+  "createdAt": "2026-07-11T20:38:29.876542645Z",
+  "status": "valid"
+}
+2026-07-11 20:38:30,000:DEBUG:acme.client:Storing nonce: tgKU1SCRWLI7ewz9_CmsVCxe7haP0BlurANI0E4xmdEq3sgnhHk
+2026-07-11 20:38:30,002:DEBUG:certbot._internal.display.obj:Notifying user: Account registered.
+2026-07-11 20:38:30,002:DEBUG:certbot._internal.main:Picked account: <Account(RegistrationResource(body=Registration(key=JWKRSA(key=<ComparableRSAKey(<cryptography.hazmat.bindings._rust.openssl.rsa.RSAPublicKey object at 0xffff91bdd770>)>), contact=(), agreement=None, status='valid', terms_of_service_agreed=None, only_return_existing=None, external_account_binding=None), uri='https://acme-v02.api.letsencrypt.org/acme/acct/3524695626', new_authzr_uri=None, terms_of_service='https://letsencrypt.org/documents/LE-SA-v1.8-July-06-2026.pdf'), 288468f49038f65bf3f6be6a6e77a38e, Meta(creation_dt=datetime.datetime(2026, 7, 11, 20, 38, 30, tzinfo=datetime.timezone.utc), creation_host='e251bf22577f', register_to_eff=None))>
+2026-07-11 20:38:30,003:DEBUG:certbot._internal.display.obj:Notifying user: Requesting a certificate for heimdall-logtech.com and www.heimdall-logtech.com
+2026-07-11 20:38:30,004:DEBUG:acme.client:JWS payload:
+b'{\n  "identifiers": [\n    {\n      "type": "dns",\n      "value": "heimdall-logtech.com"\n    },\n    {\n      "type": "dns",\n      "value": "www.heimdall-logtech.com"\n    }\n  ]\n}'
+2026-07-11 20:38:30,005:DEBUG:acme.client:Sending POST request to https://acme-v02.api.letsencrypt.org/acme/new-order:
+{
+  "protected": "eyJhbGciOiAiUlMyNTYiLCAia2lkIjogImh0dHBzOi8vYWNtZS12MDIuYXBpLmxldHNlbmNyeXB0Lm9yZy9hY21lL2FjY3QvMzUyNDY5NTYyNiIsICJub25jZSI6ICJ0Z0tVMVNDUldMSTdld3o5X0Ntc1ZDeGU3aGFQMEJsdXJBTkkwRTR4bWRFcTNzZ25oSGsiLCAidXJsIjogImh0dHBzOi8vYWNtZS12MDIuYXBpLmxldHNlbmNyeXB0Lm9yZy9hY21lL25ldy1vcmRlciJ9",
+  "signature": "pbBHq9rGHTyFJd2QIFP-s6u57NBmUlrLA4kzmQ531ArfsivDOfvF7NFlGH0Mj3DoB-bHzq5lHzehFvWtIvFoWPIqBFSu8Wkzi1PZ7NPW2OlI_CyTMTX2mVMofWRUKDvFbTYJvzHu_iemsQTfcr3DGZ-mW_Kg8IoKrae_odfuF7nvEqxjZ63fn2Tu-ARCuFrAJHWszHBSXmPtT5M2jmQ3_bsR1QMMwE6qMLqgUyxsCjJFHsHs70foe6NBKhu7wG60AwC-T_Xh86iSeRYpwDfT12QbO_LTzjDl_rgb_QDehzWxZHm5ak_pnh8suTGV7JCVvcm7S0v5GXkptiudR7zr8g",
+  "payload": "ewogICJpZGVudGlmaWVycyI6IFsKICAgIHsKICAgICAgInR5cGUiOiAiZG5zIiwKICAgICAgInZhbHVlIjogImhlaW1kYWxsLWxvZ3RlY2guY29tIgogICAgfSwKICAgIHsKICAgICAgInR5cGUiOiAiZG5zIiwKICAgICAgInZhbHVlIjogInd3dy5oZWltZGFsbC1sb2d0ZWNoLmNvbSIKICAgIH0KICBdCn0"
+}
+2026-07-11 20:38:30,207:DEBUG:urllib3.connectionpool:https://acme-v02.api.letsencrypt.org:443 "POST /acme/new-order HTTP/1.1" 201 509
+2026-07-11 20:38:30,208:DEBUG:acme.client:Received response:
+HTTP 201
+Server: nginx
+Date: Sat, 11 Jul 2026 20:38:30 GMT
+Content-Type: application/json
+Content-Length: 509
+Connection: keep-alive
+Boulder-Requester: 3524695626
+Cache-Control: public, max-age=0, no-cache
+Link: <https://acme-v02.api.letsencrypt.org/directory>;rel="index"
+Location: https://acme-v02.api.letsencrypt.org/acme/order/3524695626/531206851646
+Replay-Nonce: tgKU1SCRQXHoTpHFg_8VLfmZwVITOfT5MDRptCEYO7Q1cYFy8EI
+X-Frame-Options: DENY
+Strict-Transport-Security: max-age=604800
+
+{
+  "status": "pending",
+  "expires": "2026-07-18T20:38:30Z",
+  "identifiers": [
+    {
+      "type": "dns",
+      "value": "heimdall-logtech.com"
+    },
+    {
+      "type": "dns",
+      "value": "www.heimdall-logtech.com"
+    }
+  ],
+  "authorizations": [
+    "https://acme-v02.api.letsencrypt.org/acme/authz/3524695626/737627738126",
+    "https://acme-v02.api.letsencrypt.org/acme/authz/3524695626/737627738196"
+  ],
+  "finalize": "https://acme-v02.api.letsencrypt.org/acme/finalize/3524695626/531206851646"
+}
+2026-07-11 20:38:30,208:DEBUG:acme.client:Storing nonce: tgKU1SCRQXHoTpHFg_8VLfmZwVITOfT5MDRptCEYO7Q1cYFy8EI
+2026-07-11 20:38:30,208:DEBUG:acme.client:JWS payload:
+b''
+2026-07-11 20:38:30,209:DEBUG:acme.client:Sending POST request to https://acme-v02.api.letsencrypt.org/acme/authz/3524695626/737627738126:
+{
+  "protected": "eyJhbGciOiAiUlMyNTYiLCAia2lkIjogImh0dHBzOi8vYWNtZS12MDIuYXBpLmxldHNlbmNyeXB0Lm9yZy9hY21lL2FjY3QvMzUyNDY5NTYyNiIsICJub25jZSI6ICJ0Z0tVMVNDUlFYSG9UcEhGZ184VkxmbVp3VklUT2ZUNU1EUnB0Q0VZTzdRMWNZRnk4RUkiLCAidXJsIjogImh0dHBzOi8vYWNtZS12MDIuYXBpLmxldHNlbmNyeXB0Lm9yZy9hY21lL2F1dGh6LzM1MjQ2OTU2MjYvNzM3NjI3NzM4MTI2In0",
+  "signature": "glbboOj1y28HjuwQH6FrhMpRfv8MSayFH6a9N4w0DDV_KN1DJKsFE4B-ciijMexh_pQk_JELfwVHgT_yYvcO1VAQqqZ8Zw94RPQ0Za7THv9qdYyPi2lR0EF8bDrlbl1VXqYjvmI9fOeMsKwMwq_obQ9v1Eoo9R5ufrYMxHahFae0_tmDW_W5uhPXcSU38GCsKhElI7FiO6_LoRdStIWnrc1cGR-cfUnZB96GwV4dEOGPG1rUqyG826YR3eRVFzGICoOOJtapQYe4pn2d4L9PHZnuMZyCyO0aPYCVkxRaFMVGmboIgg0Ggh78rwu7smjiYfKhistrQ_tzIDJo3DyXvg",
+  "payload": ""
+}
+2026-07-11 20:38:30,376:DEBUG:urllib3.connectionpool:https://acme-v02.api.letsencrypt.org:443 "POST /acme/authz/3524695626/737627738126 HTTP/1.1" 200 828
+2026-07-11 20:38:30,377:DEBUG:acme.client:Received response:
+HTTP 200
+Server: nginx
+Date: Sat, 11 Jul 2026 20:38:30 GMT
+Content-Type: application/json
+Content-Length: 828
+Connection: keep-alive
+Boulder-Requester: 3524695626
+Cache-Control: public, max-age=0, no-cache
+Link: <https://acme-v02.api.letsencrypt.org/directory>;rel="index"
+Replay-Nonce: 9w0p0d3wMC3d4GKDlYMtEs9sAObAs0j_KoAYJDkcORc3BQXl1xc
+X-Frame-Options: DENY
+Strict-Transport-Security: max-age=604800
+
+{
+  "identifier": {
+    "type": "dns",
+    "value": "heimdall-logtech.com"
+  },
+  "status": "pending",
+  "expires": "2026-07-18T20:38:30Z",
+  "challenges": [
+    {
+      "type": "http-01",
+      "url": "https://acme-v02.api.letsencrypt.org/acme/chall/3524695626/737627738126/Xa9qgg",
+      "status": "pending",
+      "token": "wTLDFSkzZdl7lMqhWo9dBmxTgnIMOqgvOE2ZDzl1dMQ"
+    },
+    {
+      "type": "dns-01",
+      "url": "https://acme-v02.api.letsencrypt.org/acme/chall/3524695626/737627738126/KmGf1Q",
+      "status": "pending",
+      "token": "wTLDFSkzZdl7lMqhWo9dBmxTgnIMOqgvOE2ZDzl1dMQ"
+    },
+    {
+      "type": "tls-alpn-01",
+      "url": "https://acme-v02.api.letsencrypt.org/acme/chall/3524695626/737627738126/b-pGUA",
+      "status": "pending",
+      "token": "wTLDFSkzZdl7lMqhWo9dBmxTgnIMOqgvOE2ZDzl1dMQ"
+    }
+  ]
+}
+2026-07-11 20:38:30,377:DEBUG:acme.client:Storing nonce: 9w0p0d3wMC3d4GKDlYMtEs9sAObAs0j_KoAYJDkcORc3BQXl1xc
+2026-07-11 20:38:30,377:DEBUG:acme.challenges:tls-alpn-01 was not recognized, full message: {'type': 'tls-alpn-01', 'url': 'https://acme-v02.api.letsencrypt.org/acme/chall/3524695626/737627738126/b-pGUA', 'status': 'pending', 'token': 'wTLDFSkzZdl7lMqhWo9dBmxTgnIMOqgvOE2ZDzl1dMQ'}
+2026-07-11 20:38:30,378:DEBUG:acme.client:JWS payload:
+b''
+2026-07-11 20:38:30,379:DEBUG:acme.client:Sending POST request to https://acme-v02.api.letsencrypt.org/acme/authz/3524695626/737627738196:
+{
+  "protected": "eyJhbGciOiAiUlMyNTYiLCAia2lkIjogImh0dHBzOi8vYWNtZS12MDIuYXBpLmxldHNlbmNyeXB0Lm9yZy9hY21lL2FjY3QvMzUyNDY5NTYyNiIsICJub25jZSI6ICI5dzBwMGQzd01DM2Q0R0tEbFlNdEVzOXNBT2JBczBqX0tvQVlKRGtjT1JjM0JRWGwxeGMiLCAidXJsIjogImh0dHBzOi8vYWNtZS12MDIuYXBpLmxldHNlbmNyeXB0Lm9yZy9hY21lL2F1dGh6LzM1MjQ2OTU2MjYvNzM3NjI3NzM4MTk2In0",
+  "signature": "ePp35yTbcDAJGKfBUAYAGFdxs9mUNFufbuVfWhvnFBND3bz0rzJblFFJvdxDN26VTGEPLPcXqFeua0smrRwA4qXdB_Qg0Ql1Kk92Si1DBdWiZeGbpFAjd2EXAZr2yKuuIxdgW-yxtPknV8TUN7mYCN4TjvN2nFRpo_2DKvoS6NATFziXQMN7R3CcO1swmhQxv_PrloXWg-EwTUiZu4Fm-6ouH2DER96o3TX8J0OCcdtjTqgx4ICKCnMxCxNYi3HzPOBmB7kDpYxc4wQrDpXpwAqsJyxEiKKZj6QmtgJf2s1z_ra86xjbgla3VHP-mAsBUAiGKjDX2zQiqvV2lmrF6w",
+  "payload": ""
+}
+2026-07-11 20:38:30,545:DEBUG:urllib3.connectionpool:https://acme-v02.api.letsencrypt.org:443 "POST /acme/authz/3524695626/737627738196 HTTP/1.1" 200 832
+2026-07-11 20:38:30,546:DEBUG:acme.client:Received response:
+HTTP 200
+Server: nginx
+Date: Sat, 11 Jul 2026 20:38:30 GMT
+Content-Type: application/json
+Content-Length: 832
+Connection: keep-alive
+Boulder-Requester: 3524695626
+Cache-Control: public, max-age=0, no-cache
+Link: <https://acme-v02.api.letsencrypt.org/directory>;rel="index"
+Replay-Nonce: 9w0p0d3w_mKEVmCPtxkoZA7Vou3jn33WYEzf0iPvjDJF6ZPkwDA
+X-Frame-Options: DENY
+Strict-Transport-Security: max-age=604800
+
+{
+  "identifier": {
+    "type": "dns",
+    "value": "www.heimdall-logtech.com"
+  },
+  "status": "pending",
+  "expires": "2026-07-18T20:38:30Z",
+  "challenges": [
+    {
+      "type": "tls-alpn-01",
+      "url": "https://acme-v02.api.letsencrypt.org/acme/chall/3524695626/737627738196/1TLhPw",
+      "status": "pending",
+      "token": "dVJjtPp6Nvh352Cd3561BcNG5ABmyPb_PlhyqNBkzCE"
+    },
+    {
+      "type": "http-01",
+      "url": "https://acme-v02.api.letsencrypt.org/acme/chall/3524695626/737627738196/ZHBo7g",
+      "status": "pending",
+      "token": "dVJjtPp6Nvh352Cd3561BcNG5ABmyPb_PlhyqNBkzCE"
+    },
+    {
+      "type": "dns-01",
+      "url": "https://acme-v02.api.letsencrypt.org/acme/chall/3524695626/737627738196/3qksDg",
+      "status": "pending",
+      "token": "dVJjtPp6Nvh352Cd3561BcNG5ABmyPb_PlhyqNBkzCE"
+    }
+  ]
+}
+2026-07-11 20:38:30,546:DEBUG:acme.client:Storing nonce: 9w0p0d3w_mKEVmCPtxkoZA7Vou3jn33WYEzf0iPvjDJF6ZPkwDA
+2026-07-11 20:38:30,546:DEBUG:acme.challenges:tls-alpn-01 was not recognized, full message: {'type': 'tls-alpn-01', 'url': 'https://acme-v02.api.letsencrypt.org/acme/chall/3524695626/737627738196/1TLhPw', 'status': 'pending', 'token': 'dVJjtPp6Nvh352Cd3561BcNG5ABmyPb_PlhyqNBkzCE'}
+2026-07-11 20:38:30,547:INFO:certbot._internal.auth_handler:Performing the following challenges:
+2026-07-11 20:38:30,547:INFO:certbot._internal.auth_handler:dns-01 challenge for Identifier(typ=IdentifierType(dns), value='heimdall-logtech.com')
+2026-07-11 20:38:30,547:INFO:certbot._internal.auth_handler:dns-01 challenge for Identifier(typ=IdentifierType(dns), value='www.heimdall-logtech.com')
+2026-07-11 20:38:30,547:INFO:certbot.compat.misc:Running manual-auth-hook command: /auth-hook.sh
+2026-07-11 20:38:30,550:WARNING:certbot.display.ops:Hook '--manual-auth-hook' for heimdall-logtech.com reported error code 127
+2026-07-11 20:38:30,550:WARNING:certbot.display.ops:Hook '--manual-auth-hook' for heimdall-logtech.com ran with error output:
+ /bin/sh: /auth-hook.sh: not found
+2026-07-11 20:38:30,551:INFO:certbot.compat.misc:Running manual-auth-hook command: /auth-hook.sh
+2026-07-11 20:38:30,553:WARNING:certbot.display.ops:Hook '--manual-auth-hook' for www.heimdall-logtech.com reported error code 127
+2026-07-11 20:38:30,553:WARNING:certbot.display.ops:Hook '--manual-auth-hook' for www.heimdall-logtech.com ran with error output:
+ /bin/sh: /auth-hook.sh: not found
+2026-07-11 20:38:30,554:DEBUG:acme.client:JWS payload:
+b'{}'
+2026-07-11 20:38:30,555:DEBUG:acme.client:Sending POST request to https://acme-v02.api.letsencrypt.org/acme/chall/3524695626/737627738126/KmGf1Q:
+{
+  "protected": "eyJhbGciOiAiUlMyNTYiLCAia2lkIjogImh0dHBzOi8vYWNtZS12MDIuYXBpLmxldHNlbmNyeXB0Lm9yZy9hY21lL2FjY3QvMzUyNDY5NTYyNiIsICJub25jZSI6ICI5dzBwMGQzd19tS0VWbUNQdHhrb1pBN1ZvdTNqbjMzV1lFemYwaVB2akRKRjZaUGt3REEiLCAidXJsIjogImh0dHBzOi8vYWNtZS12MDIuYXBpLmxldHNlbmNyeXB0Lm9yZy9hY21lL2NoYWxsLzM1MjQ2OTU2MjYvNzM3NjI3NzM4MTI2L0ttR2YxUSJ9",
+  "signature": "HOymqpUYmtQWMMCTiYFgWxRkkY-Fn4v-Vn1zQJcH9BclXfibHpqyni5z7j1ZZdSivn9B26m8jF-b_HpJ4L5Ub4EMRCcQjqigfTTb3aokxNr1p5bHdnuyKUWJi_GHPxnYGIwbjcZ6fix25aBYe5-ZbUZXTF2s6vrJZGPFHAb17CoqE28BQxoriKHqr69CiJ_SxKMngkuuTGZ39NXKfr_WQRPFoKMRAtTUbBf5BHDGCe9r4z_ye6dC5f0SVTKqDz5zfRrA7-hkQC1E26AqToe_558mpwXSspgPhcfRCOJWB1ASFQp-n3MVD9eAfH4OEr2RY5xqwqKZE0sHBnp4QsvBUA",
+  "payload": "e30"
+}
+2026-07-11 20:38:30,724:DEBUG:urllib3.connectionpool:https://acme-v02.api.letsencrypt.org:443 "POST /acme/chall/3524695626/737627738126/KmGf1Q HTTP/1.1" 200 194
+2026-07-11 20:38:30,725:DEBUG:acme.client:Received response:
+HTTP 200
+Server: nginx
+Date: Sat, 11 Jul 2026 20:38:30 GMT
+Content-Type: application/json
+Content-Length: 194
+Connection: keep-alive
+Boulder-Requester: 3524695626
+Cache-Control: public, max-age=0, no-cache
+Link: <https://acme-v02.api.letsencrypt.org/directory>;rel="index", <https://acme-v02.api.letsencrypt.org/acme/authz/3524695626/737627738126>;rel="up"
+Location: https://acme-v02.api.letsencrypt.org/acme/chall/3524695626/737627738126/KmGf1Q
+Replay-Nonce: 9w0p0d3wIdvAMw4oeIZQ_U8PaPStf9Tnah_3YCrgqFhss-aIM80
+X-Frame-Options: DENY
+Strict-Transport-Security: max-age=604800
+
+{
+  "type": "dns-01",
+  "url": "https://acme-v02.api.letsencrypt.org/acme/chall/3524695626/737627738126/KmGf1Q",
+  "status": "pending",
+  "token": "wTLDFSkzZdl7lMqhWo9dBmxTgnIMOqgvOE2ZDzl1dMQ"
+}
+2026-07-11 20:38:30,725:DEBUG:acme.client:Storing nonce: 9w0p0d3wIdvAMw4oeIZQ_U8PaPStf9Tnah_3YCrgqFhss-aIM80
+2026-07-11 20:38:30,725:DEBUG:acme.client:JWS payload:
+b'{}'
+2026-07-11 20:38:30,727:DEBUG:acme.client:Sending POST request to https://acme-v02.api.letsencrypt.org/acme/chall/3524695626/737627738196/3qksDg:
+{
+  "protected": "eyJhbGciOiAiUlMyNTYiLCAia2lkIjogImh0dHBzOi8vYWNtZS12MDIuYXBpLmxldHNlbmNyeXB0Lm9yZy9hY21lL2FjY3QvMzUyNDY5NTYyNiIsICJub25jZSI6ICI5dzBwMGQzd0lkdkFNdzRvZUlaUV9VOFBhUFN0ZjlUbmFoXzNZQ3JncUZoc3MtYUlNODAiLCAidXJsIjogImh0dHBzOi8vYWNtZS12MDIuYXBpLmxldHNlbmNyeXB0Lm9yZy9hY21lL2NoYWxsLzM1MjQ2OTU2MjYvNzM3NjI3NzM4MTk2LzNxa3NEZyJ9",
+  "signature": "LetVq7tHLr6ToEWwiG7IWGD6YxafDNQAkxpyv3gu1xUzYJJdObMzW0QYZ5aviJVdhgyGg8io5aLbBMvIC7eGNbj3b1EkhM28Qi7V2B_6D9Nwe-oJTtdEt2GotffmC86cvo_NH6zsmyfCn_Z7drGbxPUmLXk16kCGIEzlfk6ZSbXkcIn2ABFfe69ViqPlnRe4Ox-igD2_y3Je40FNFIHHa9y76EfnTyWpXqfHrly5rwEgjQaVdyOA5i4VF8ddDi6z_aIm34k-reNOyW9GureJ-B9q_pLqQBJlebcqAOS9GEtqupd_ZXJir8xWmJECsJ0WhzpW9kC-nTChhemFiS1qsQ",
+  "payload": "e30"
+}
+2026-07-11 20:38:30,895:DEBUG:urllib3.connectionpool:https://acme-v02.api.letsencrypt.org:443 "POST /acme/chall/3524695626/737627738196/3qksDg HTTP/1.1" 200 194
+2026-07-11 20:38:30,895:DEBUG:acme.client:Received response:
+HTTP 200
+Server: nginx
+Date: Sat, 11 Jul 2026 20:38:30 GMT
+Content-Type: application/json
+Content-Length: 194
+Connection: keep-alive
+Boulder-Requester: 3524695626
+Cache-Control: public, max-age=0, no-cache
+Link: <https://acme-v02.api.letsencrypt.org/directory>;rel="index", <https://acme-v02.api.letsencrypt.org/acme/authz/3524695626/737627738196>;rel="up"
+Location: https://acme-v02.api.letsencrypt.org/acme/chall/3524695626/737627738196/3qksDg
+Replay-Nonce: 9w0p0d3wrEVY60kcaSC1VqQHSmL3gewtmdd3RK9vbQv4D4qRPAI
+X-Frame-Options: DENY
+Strict-Transport-Security: max-age=604800
+
+{
+  "type": "dns-01",
+  "url": "https://acme-v02.api.letsencrypt.org/acme/chall/3524695626/737627738196/3qksDg",
+  "status": "pending",
+  "token": "dVJjtPp6Nvh352Cd3561BcNG5ABmyPb_PlhyqNBkzCE"
+}
+2026-07-11 20:38:30,895:DEBUG:acme.client:Storing nonce: 9w0p0d3wrEVY60kcaSC1VqQHSmL3gewtmdd3RK9vbQv4D4qRPAI
+2026-07-11 20:38:30,896:INFO:certbot._internal.auth_handler:Waiting for verification...
+2026-07-11 20:38:31,896:DEBUG:acme.client:JWS payload:
+b''
+2026-07-11 20:38:31,898:DEBUG:acme.client:Sending POST request to https://acme-v02.api.letsencrypt.org/acme/authz/3524695626/737627738126:
+{
+  "protected": "eyJhbGciOiAiUlMyNTYiLCAia2lkIjogImh0dHBzOi8vYWNtZS12MDIuYXBpLmxldHNlbmNyeXB0Lm9yZy9hY21lL2FjY3QvMzUyNDY5NTYyNiIsICJub25jZSI6ICI5dzBwMGQzd3JFVlk2MGtjYVNDMVZxUUhTbUwzZ2V3dG1kZDNSSzl2YlF2NEQ0cVJQQUkiLCAidXJsIjogImh0dHBzOi8vYWNtZS12MDIuYXBpLmxldHNlbmNyeXB0Lm9yZy9hY21lL2F1dGh6LzM1MjQ2OTU2MjYvNzM3NjI3NzM4MTI2In0",
+  "signature": "P-_9T3Wps_s5Ixbo-5_TuPNy8HR1Hfh2xUxL5fKXQB0zeROdm7Oi2nnDJwrs-oZdduhF0PjS7IFBipiBCG1-IitQw-OdN3xjQtJGFVa9qloF37Xc3cufHBDan4ubhRW1yKBqdVjCHwy4ZBNOzvScwZiZzqjx27Ef9OzNYn_jC5bebkExNOIoZSIY5_WHyZQRGtU-2RIqqAzmI7U1KQDxfS3Oj0cfpVYH09aon0fHypgAx4iDY5D_krXPsQxXlXQQcbO56PDJ0Sx8A2-VkR7PXEVLjUMa8V2U47eOSGp73WECpJ5pp3pXWUyFSrv_GAf42OELe4CCpKpfZnTfFe5IsQ",
+  "payload": ""
+}
+2026-07-11 20:38:32,064:DEBUG:urllib3.connectionpool:https://acme-v02.api.letsencrypt.org:443 "POST /acme/authz/3524695626/737627738126 HTTP/1.1" 200 671
+2026-07-11 20:38:32,065:DEBUG:acme.client:Received response:
+HTTP 200
+Server: nginx
+Date: Sat, 11 Jul 2026 20:38:31 GMT
+Content-Type: application/json
+Content-Length: 671
+Connection: keep-alive
+Boulder-Requester: 3524695626
+Cache-Control: public, max-age=0, no-cache
+Link: <https://acme-v02.api.letsencrypt.org/directory>;rel="index"
+Replay-Nonce: 9w0p0d3wk5oIfdqh-TDD90KWHWVJSzvboSfltGVYAr_MFvTzhH4
+X-Frame-Options: DENY
+Strict-Transport-Security: max-age=604800
+
+{
+  "identifier": {
+    "type": "dns",
+    "value": "heimdall-logtech.com"
+  },
+  "status": "invalid",
+  "expires": "2026-07-18T20:38:30Z",
+  "challenges": [
+    {
+      "type": "dns-01",
+      "url": "https://acme-v02.api.letsencrypt.org/acme/chall/3524695626/737627738126/KmGf1Q",
+      "status": "invalid",
+      "validated": "2026-07-11T20:38:30Z",
+      "error": {
+        "type": "urn:ietf:params:acme:error:dns",
+        "detail": "DNS problem: NXDOMAIN looking up TXT for _acme-challenge.heimdall-logtech.com - check that a DNS record exists for this domain",
+        "status": 400
+      },
+      "token": "wTLDFSkzZdl7lMqhWo9dBmxTgnIMOqgvOE2ZDzl1dMQ"
+    }
+  ]
+}
+2026-07-11 20:38:32,065:DEBUG:acme.client:Storing nonce: 9w0p0d3wk5oIfdqh-TDD90KWHWVJSzvboSfltGVYAr_MFvTzhH4
+2026-07-11 20:38:32,065:DEBUG:acme.client:JWS payload:
+b''
+2026-07-11 20:38:32,067:DEBUG:acme.client:Sending POST request to https://acme-v02.api.letsencrypt.org/acme/authz/3524695626/737627738196:
+{
+  "protected": "eyJhbGciOiAiUlMyNTYiLCAia2lkIjogImh0dHBzOi8vYWNtZS12MDIuYXBpLmxldHNlbmNyeXB0Lm9yZy9hY21lL2FjY3QvMzUyNDY5NTYyNiIsICJub25jZSI6ICI5dzBwMGQzd2s1b0lmZHFoLVRERDkwS1dIV1ZKU3p2Ym9TZmx0R1ZZQXJfTUZ2VHpoSDQiLCAidXJsIjogImh0dHBzOi8vYWNtZS12MDIuYXBpLmxldHNlbmNyeXB0Lm9yZy9hY21lL2F1dGh6LzM1MjQ2OTU2MjYvNzM3NjI3NzM4MTk2In0",
+  "signature": "ATX7YbLNDrtkoo0cTH8uKg80EwdG6D__gINGRI1Ug_zsJhKdOv_dNbH_CoJcBKGqZDTKENAN5_mcizmqJ45lP4LYBw23tvoa4hjrlpxIIsqxvx068dZo7JgpclIHSq9HNQ8YhlWX5RDV2bKJrv2_7FKXfXc1njNTy-1-jrqTVSmniiYydyV5la9N0ZqM96_1My_p_xrc8hz1216ZKUvjGzBJ379e1KsW5WhfR56tvdwXR1p-OPH5gOQwZL2acX76OKbrwwcqQB2CFUaTu3jov6Uxezo5j_tcAWsUGuVIwMBSHGrLK0bSEoOuH6jPOJsb8dMxyaJcbYUI5OhnBGJ1fw",
+  "payload": ""
+}
+2026-07-11 20:38:32,232:DEBUG:urllib3.connectionpool:https://acme-v02.api.letsencrypt.org:443 "POST /acme/authz/3524695626/737627738196 HTTP/1.1" 200 679
+2026-07-11 20:38:32,233:DEBUG:acme.client:Received response:
+HTTP 200
+Server: nginx
+Date: Sat, 11 Jul 2026 20:38:32 GMT
+Content-Type: application/json
+Content-Length: 679
+Connection: keep-alive
+Boulder-Requester: 3524695626
+Cache-Control: public, max-age=0, no-cache
+Link: <https://acme-v02.api.letsencrypt.org/directory>;rel="index"
+Replay-Nonce: tgKU1SCRcLyITrnyBBZ0-5Bt495heRj2BKwNnAgTT6NB52wFEpw
+X-Frame-Options: DENY
+Strict-Transport-Security: max-age=604800
+
+{
+  "identifier": {
+    "type": "dns",
+    "value": "www.heimdall-logtech.com"
+  },
+  "status": "invalid",
+  "expires": "2026-07-18T20:38:30Z",
+  "challenges": [
+    {
+      "type": "dns-01",
+      "url": "https://acme-v02.api.letsencrypt.org/acme/chall/3524695626/737627738196/3qksDg",
+      "status": "invalid",
+      "validated": "2026-07-11T20:38:30Z",
+      "error": {
+        "type": "urn:ietf:params:acme:error:dns",
+        "detail": "DNS problem: NXDOMAIN looking up TXT for _acme-challenge.www.heimdall-logtech.com - check that a DNS record exists for this domain",
+        "status": 400
+      },
+      "token": "dVJjtPp6Nvh352Cd3561BcNG5ABmyPb_PlhyqNBkzCE"
+    }
+  ]
+}
+2026-07-11 20:38:32,233:DEBUG:acme.client:Storing nonce: tgKU1SCRcLyITrnyBBZ0-5Bt495heRj2BKwNnAgTT6NB52wFEpw
+2026-07-11 20:38:32,233:INFO:certbot._internal.auth_handler:Challenge failed for domain heimdall-logtech.com
+2026-07-11 20:38:32,233:INFO:certbot._internal.auth_handler:Challenge failed for domain www.heimdall-logtech.com
+2026-07-11 20:38:32,234:INFO:certbot._internal.auth_handler:dns-01 challenge for Identifier(typ=IdentifierType(dns), value='heimdall-logtech.com')
+2026-07-11 20:38:32,234:INFO:certbot._internal.auth_handler:dns-01 challenge for Identifier(typ=IdentifierType(dns), value='www.heimdall-logtech.com')
+2026-07-11 20:38:32,234:DEBUG:certbot._internal.display.obj:Notifying user: 
+Certbot failed to authenticate some domains (authenticator: manual). The Certificate Authority reported these problems:
+  Identifier: heimdall-logtech.com
+  Type:   dns
+  Detail: DNS problem: NXDOMAIN looking up TXT for _acme-challenge.heimdall-logtech.com - check that a DNS record exists for this domain
+
+  Identifier: www.heimdall-logtech.com
+  Type:   dns
+  Detail: DNS problem: NXDOMAIN looking up TXT for _acme-challenge.www.heimdall-logtech.com - check that a DNS record exists for this domain
+
+Hint: The Certificate Authority failed to verify the DNS TXT records created by the --manual-auth-hook. Ensure that this hook is functioning correctly and that it waits a sufficient duration of time for DNS propagation. Refer to "certbot --help manual" and the Certbot User Guide.
+
+2026-07-11 20:38:32,235:DEBUG:certbot._internal.error_handler:Encountered exception:
+Traceback (most recent call last):
+  File "/opt/certbot/src/certbot/src/certbot/_internal/auth_handler.py", line 104, in handle_authorizations
+    self._poll_authorizations(authzrs, max_retries, max_time_mins, best_effort)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/certbot/src/certbot/src/certbot/_internal/auth_handler.py", line 208, in _poll_authorizations
+    raise errors.AuthorizationError('Some challenges have failed.')
+certbot.errors.AuthorizationError: Some challenges have failed.
+
+2026-07-11 20:38:32,235:DEBUG:certbot._internal.error_handler:Calling registered functions
+2026-07-11 20:38:32,235:INFO:certbot._internal.auth_handler:Cleaning up challenges
+2026-07-11 20:38:32,235:DEBUG:certbot._internal.log:Exiting abnormally:
+Traceback (most recent call last):
+  File "/usr/local/bin/certbot", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/opt/certbot/src/certbot/src/certbot/main.py", line 18, in main
+    return internal_main.main(cli_args)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/opt/certbot/src/certbot/src/certbot/_internal/main.py", line 1886, in main
+    return config.func(config, plugins)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/certbot/src/certbot/src/certbot/_internal/main.py", line 1598, in certonly
+    lineage = _get_and_save_cert(le_client, config, sans, certname, lineage)
+  File "/opt/certbot/src/certbot/src/certbot/_internal/main.py", line 143, in _get_and_save_cert
+    lineage = le_client.obtain_and_enroll_certificate(sans, certname)
+  File "/opt/certbot/src/certbot/src/certbot/_internal/client.py", line 533, in obtain_and_enroll_certificate
+    cert, chain, key, _ = self.obtain_certificate(sans)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/opt/certbot/src/certbot/src/certbot/_internal/client.py", line 434, in obtain_certificate
+    orderr = self._get_order_and_authorizations(csr.data, self.config.allow_subset_of_names)
+  File "/opt/certbot/src/certbot/src/certbot/_internal/client.py", line 512, in _get_order_and_authorizations
+    authzr = self.auth_handler.handle_authorizations(orderr, self.config, best_effort)
+  File "/opt/certbot/src/certbot/src/certbot/_internal/auth_handler.py", line 104, in handle_authorizations
+    self._poll_authorizations(authzrs, max_retries, max_time_mins, best_effort)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/certbot/src/certbot/src/certbot/_internal/auth_handler.py", line 208, in _poll_authorizations
+    raise errors.AuthorizationError('Some challenges have failed.')
+certbot.errors.AuthorizationError: Some challenges have failed.
+2026-07-11 20:38:32,239:ERROR:certbot._internal.log:Some challenges have failed.

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Motoristas — Heimdall Logtech{% endblock %}
+{% block content %}
+<h2>Motoristas</h2>
+
+{% if drivers %}
+<div class="table-wrap">
+<table>
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Telefone</th>
+            <th>Veículo</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for driver in drivers %}
+        <tr>
+            <td>{{ driver.name or "—" }}</td>
+            <td>{{ driver.phone }}</td>
+            <td>{{ driver.vehicle_plate or "—" }}{% if driver.vehicle_type %} ({{ driver.vehicle_type }}){% endif %}</td>
+            <td><a href="/web/drivers/{{ driver.id }}">Ver</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<p>Nenhum motorista cadastrado ainda — o cadastro é criado automaticamente no primeiro relato de insucesso.</p>
+{% endif %}
+{% endblock %}

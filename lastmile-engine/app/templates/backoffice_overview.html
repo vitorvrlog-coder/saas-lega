@@ -1,0 +1,103 @@
+{% extends "backoffice_base.html" %}
+{% block title %}Visão geral — Backoffice Heimdall{% endblock %}
+{% block content %}
+
+<div class="hero">
+    <div>
+        <h1>Visão geral</h1>
+        <p class="muted">Transportadoras ativas, cadastros recentes e saúde operacional de cada uma.</p>
+    </div>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-bubble stat-green">
+        <span class="stat-icon">🟢</span>
+        <span class="stat-text">
+            <span class="stat-value">{{ overview.active_tenant_count }}</span>
+            <span class="stat-label">Transportadoras ativas</span>
+        </span>
+    </div>
+    <div class="stat-bubble stat-gold">
+        <span class="stat-icon">🏢</span>
+        <span class="stat-text">
+            <span class="stat-value">{{ overview.total_tenant_count }}</span>
+            <span class="stat-label">Total de transportadoras</span>
+        </span>
+    </div>
+    <div class="stat-bubble stat-blue">
+        <span class="stat-icon">🆕</span>
+        <span class="stat-text">
+            <span class="stat-value">{{ overview.recent_tenants | length }}</span>
+            <span class="stat-label">Novos cadastros (7 dias)</span>
+        </span>
+    </div>
+</div>
+
+{% if overview.recent_tenants %}
+<article>
+    <header><strong>Cadastros recentes</strong></header>
+    <ul>
+        {% for tenant in overview.recent_tenants %}
+        <li>
+            <a href="/backoffice/tenants/{{ tenant.id }}">{{ tenant.name }}</a>
+            <span class="muted"> — {{ tenant.created_at | local_dt }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+</article>
+{% endif %}
+
+<article>
+    <header><strong>Transportadoras</strong></header>
+    {% if overview.rows %}
+    <div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Status</th>
+                <th>Ocorrências</th>
+                <th>Resolvido</th>
+                <th>Insucesso</th>
+                <th>Escalado</th>
+                <th>Taxa de resolução</th>
+                <th>Operadores ativos</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in overview.rows %}
+            <tr>
+                <td>{{ row.tenant.name }}</td>
+                <td>
+                    {% if row.tenant.is_active %}
+                    <span class="badge badge-success">Ativo</span>
+                    {% else %}
+                    <span class="badge badge-muted">Inativo</span>
+                    {% endif %}
+                </td>
+                <td>{{ row.occurrence_count }}</td>
+                <td>{{ row.resolved_count }}</td>
+                <td>{{ row.failed_count }}</td>
+                <td>{{ row.escalated_count }}</td>
+                <td>
+                    {% if row.resolution_rate is not none %}
+                    {{ "%.0f"|format(row.resolution_rate * 100) }}%
+                    {% else %}
+                    <span class="muted">—</span>
+                    {% endif %}
+                </td>
+                <td>{{ row.active_operator_count }}</td>
+                <td><a href="/backoffice/tenants/{{ row.tenant.id }}">Gerenciar</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="muted">Nenhuma transportadora cadastrada ainda.</p>
+    {% endif %}
+</article>
+
+<a href="/backoffice/tenants/new" role="button">Nova transportadora</a>
+{% endblock %}

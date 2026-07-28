@@ -1,0 +1,7 @@
+<span id="escalations-count-badge"
+      hx-get="/web/escalations/count-badge" hx-trigger="every 15s" hx-swap="outerHTML"
+      data-count="{{ count }}">
+    {% if count > 0 %}
+    <span class="badge badge-escalated" style="margin-left:0.35rem;">{{ count }}</span>
+    {% endif %}
+</span>

@@ -1,0 +1,19 @@
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for motorista.heimdall-logtech.com
+Hook '--manual-auth-hook' for motorista.heimdall-logtech.com ran with error output:
+ Waiting for DNS propagation of _acme-challenge.motorista.heimdall-logtech.com = ctyROtxY0MUG9OMNvjdYYoy0_VoaigM1krtHAaMuaco
+ DNS propagated, continuing.
+
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/motorista.heimdall-logtech.com/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/motorista.heimdall-logtech.com/privkey.pem
+This certificate expires on 2026-10-09.
+These files will be updated when the certificate renews.
+NEXT STEPS:
+- The certificate will need to be renewed before it expires. Certbot can automatically renew the certificate in the background, but you may need to take steps to enable that functionality. See https://certbot.org/renewal-setup for instructions.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

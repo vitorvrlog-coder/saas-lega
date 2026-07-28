@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Importar planilha de rota — Heimdall Logtech{% endblock %}
+{% block content %}
+<h2>Importar planilha de rota</h2>
+<p class="muted">
+    Colunas obrigatórias: <code>stop_number</code>, <code>driver_phone</code>,
+    <code>customer_name</code>, <code>customer_phone</code>, <code>address</code>
+    (coluna opcional: <code>route_id</code>). Formatos aceitos: .xlsx ou .csv.
+</p>
+
+{% if error %}<p style="color: var(--pico-del-color)">{{ error }}</p>{% endif %}
+
+<form method="post" action="/web/manifests/new" enctype="multipart/form-data">
+    <label for="route_date">Data da rota</label>
+    <input type="date" id="route_date" name="route_date" required>
+
+    <label for="file">Arquivo (.xlsx ou .csv)</label>
+    <input type="file" id="file" name="file" accept=".xlsx,.csv" required>
+
+    <button type="submit">Importar</button>
+    <a href="/web/manifests" role="button" class="secondary outline">Cancelar</a>
+</form>
+{% endblock %}

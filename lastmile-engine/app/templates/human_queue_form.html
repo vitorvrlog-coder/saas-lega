@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Preencher fila — Heimdall Logtech{% endblock %}
+{% block content %}
+<h2>Preencher ocorrência</h2>
+<p class="muted">
+    Motorista: <strong>{{ occurrence.driver_phone }}</strong> —
+    Motivo: <strong>{{ occurrence.failure_reason.value if occurrence.failure_reason else "—" }}</strong>
+</p>
+
+{% if error %}<p style="color: var(--pico-del-color)">{{ error }}</p>{% endif %}
+
+<form method="post" action="/web/human-queue/{{ occurrence.id }}">
+    <label for="route_id">ID da rota</label>
+    <input type="text" id="route_id" name="route_id" required>
+
+    <label for="customer_name">Nome do cliente</label>
+    <input type="text" id="customer_name" name="customer_name" required>
+
+    <label for="customer_phone">Telefone do cliente (WhatsApp)</label>
+    <input type="text" id="customer_phone" name="customer_phone" placeholder="Ex: 47999998888" required>
+
+    <label for="original_address">Endereço original da entrega</label>
+    <textarea id="original_address" name="original_address" required></textarea>
+
+    <button type="submit">Confirmar e contatar cliente</button>
+    <a href="/web/human-queue" role="button" class="secondary outline">Cancelar</a>
+</form>
+{% endblock %}

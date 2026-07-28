@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Ocorrência — Heimdall Logtech{% endblock %}
+{% block content %}
+<p><a href="/web/occurrences">&larr; Voltar</a></p>
+
+<div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+    <h2>
+        Ocorrência
+        <span class="badge {{ occurrence.state | state_badge_class }}">{{ occurrence.state | state_label }}</span>
+        {% if occurrence.archived_at %}<span class="badge badge-muted">Arquivada</span>{% endif %}
+    </h2>
+    {% if occurrence.archived_at %}
+    <form method="post" action="/web/occurrences/{{ occurrence.id }}/unarchive" style="margin:0;">
+        <button type="submit" class="secondary outline">Desarquivar</button>
+    </form>
+    {% else %}
+    <form method="post" action="/web/occurrences/{{ occurrence.id }}/archive" style="margin:0;">
+        <button type="submit" class="secondary outline">Arquivar</button>
+    </form>
+    {% endif %}
+</div>
+
+<div class="grid">
+    <article>
+        <h4>Motorista</h4>
+        <p>{{ occurrence.driver_phone }}</p>
+        <h4>Motivo</h4>
+        <p>{{ occurrence.failure_reason.value if occurrence.failure_reason else "—" }}
+            {% if occurrence.failure_confidence %}<span class="muted">(confiança {{ "%.0f"|format(occurrence.failure_confidence * 100) }}%)</span>{% endif %}
+        </p>
+        <h4>Tenant</h4>
+        <p>{{ tenant.name }}</p>
+    </article>
+    <article>
+        <h4>Cliente</h4>
+        <p>{{ occurrence.customer_name or "—" }} — {{ occurrence.customer_phone or "—" }}</p>
+        <h4>Rota</h4>
+        <p>{{ occurrence.route_id or "—" }}</p>
+        <h4>Endereço original</h4>
+        <p>{{ occurrence.original_address or "—" }}</p>
+    </article>
+    <article>
+        <h4>Tentativas de contato</h4>
+        <p>{{ occurrence.contact_attempt_count }}</p>
+        {% if occurrence.new_address_text %}
+        <h4>Novo endereço pedido</h4>
+        <p>{{ occurrence.new_address_text }}
+            {% if occurrence.distance_km is not none %}
+            — {{ occurrence.distance_km }}km
+            ({{ "dentro" if occurrence.within_radius else "fora" }} do raio)
+            {% endif %}
+        </p>
+        {% endif %}
+        {% if occurrence.closure_reason %}
+        <h4>Fechamento</h4>
+        <p>{{ occurrence.closure_reason }}</p>
+        {% endif %}
+        {% if next_contact_deadline %}
+        <h4>Próxima tentativa automática</h4>
+        <p>
+            <span id="next-contact-countdown" data-deadline="{{ next_contact_deadline.isoformat() }}">calculando...</span>
+        </p>
+        {% endif %}
+    </article>
+</div>
+
+{% if next_contact_deadline %}
+<script>
+(function () {
+    var el = document.getElementById("next-contact-countdown");
+    var deadline = new Date(el.getAttribute("data-deadline")).getTime();
+
+    function tick() {
+        var remainingMs = deadline - Date.now();
+        if (remainingMs <= 0) {
+            el.textContent = "aguardando o sistema processar o timeout...";
+            return;
+        }
+        var totalSeconds = Math.floor(remainingMs / 1000);
+        var minutes = Math.floor(totalSeconds / 60);
+        var seconds = totalSeconds % 60;
+        el.textContent = minutes + "min " + String(seconds).padStart(2, "0") + "s";
+        setTimeout(tick, 1000);
+    }
+    tick();
+})();
+</script>
+{% endif %}
+
+<h3>Linha do tempo</h3>
+<div class="timeline">
+    {% for t in transitions %}
+    <div class="timeline-item">
+        <strong>{{ t.from_state.value if t.from_state else "início" }} &rarr; {{ t.to_state.value }}</strong>
+        <span class="muted">— {{ t.triggered_by.value }} — {{ t.created_at | local_dt("%d/%m %H:%M:%S") }}</span>
+        {% if t.reason %}<br><span class="muted">{{ t.reason }}</span>{% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<h3>Mensagens trocadas</h3>
+{% if messages %}
+<div>
+    {% for m in messages %}
+    <p class="{{ 'msg-inbound' if m.direction.value == 'inbound' else 'msg-outbound' }}">
+        <strong>{{ m.participant.value }}</strong>
+        <span class="muted">({{ m.direction.value }}, {{ m.phone }}, {{ m.created_at | local_dt("%d/%m %H:%M:%S") }})</span>
+        {% if m.direction.value == 'outbound' %}
+        {% if m.delivery_status == 'read' %}<span class="badge badge-resolved">Lida</span>
+        {% elif m.delivery_status == 'played' %}<span class="badge badge-resolved">Reproduzida</span>
+        {% elif m.delivery_status == 'delivered' %}<span class="badge badge-success">Entregue</span>
+        {% elif m.delivery_status == 'sent' %}<span class="badge badge-pending">Enviada (sem confirmação)</span>
+        {% else %}<span class="badge badge-failed">Sem confirmação de envio</span>
+        {% endif %}
+        {% endif %}
+        <br>
+        {{ m.content_text or ("[" ~ m.content_type.value ~ "]") }}
+    </p>
+    {% endfor %}
+</div>
+{% else %}
+<p class="muted">Nenhuma mensagem registrada.</p>
+{% endif %}
+
+<h3>Decisões de IA</h3>
+{% if ai_decisions %}
+<table>
+    <thead>
+        <tr>
+            <th>Tipo</th>
+            <th>Provedor</th>
+            <th>Válido</th>
+            <th>Confiança</th>
+            <th>Escalado</th>
+            <th>Quando</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in ai_decisions %}
+        <tr>
+            <td>{{ d.decision_type.value }}</td>
+            <td>{{ d.ai_provider }} / {{ d.ai_model }}</td>
+            <td>{{ "✓" if d.is_valid_schema else "✗" }}</td>
+            <td>{{ "%.0f"|format(d.confidence * 100) ~ "%" if d.confidence is not none else "—" }}</td>
+            <td>{{ "sim" if d.escalated_to_human else "não" }}</td>
+            <td class="muted">{{ d.created_at | local_dt("%d/%m %H:%M:%S") }}</td>
+        </tr>
+        {% if d.error_message %}
+        <tr><td colspan="6" class="muted">Erro: {{ d.error_message }}</td></tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="muted">Nenhuma decisão de IA registrada.</p>
+{% endif %}
+{% endblock %}

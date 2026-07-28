@@ -1,0 +1,10 @@
+.env
+.secrets/
+.ssh/
+.docker/
+*.tar.gz
+node_modules/
+__pycache__/
+*.pyc
+.bash_history
+.gitignore~

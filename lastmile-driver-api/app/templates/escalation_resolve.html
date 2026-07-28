@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Resolver escalação — Heimdall Logtech{% endblock %}
+{% block content %}
+<p><a href="/web/escalations">&larr; Voltar</a></p>
+
+<h2>
+    Resolver escalação
+    <span class="badge {{ occurrence.state | state_badge_class }}">{{ occurrence.state | state_label }}</span>
+</h2>
+
+<div class="grid">
+    <article>
+        <h4>Motorista</h4>
+        <p>{{ occurrence.driver_phone }}</p>
+        <h4>Tenant</h4>
+        <p>{{ tenant.name }}</p>
+    </article>
+    <article>
+        <h4>Cliente</h4>
+        <p>{{ occurrence.customer_name or "—" }} — {{ occurrence.customer_phone or "—" }}</p>
+        <h4>Endereço original</h4>
+        <p>{{ occurrence.original_address or "—" }}</p>
+    </article>
+</div>
+
+<h3>Mensagens trocadas</h3>
+{% if messages %}
+<div>
+    {% for m in messages %}
+    <p class="{{ 'msg-inbound' if m.direction.value == 'inbound' else 'msg-outbound' }}">
+        <strong>{{ m.participant.value }}</strong>
+        <span class="muted">({{ m.direction.value }}, {{ m.created_at | local_dt("%d/%m %H:%M:%S") }})</span><br>
+        {{ m.content_text or ("[" ~ m.content_type.value ~ "]") }}
+    </p>
+    {% endfor %}
+</div>
+{% else %}
+<p class="muted">Nenhuma mensagem registrada.</p>
+{% endif %}
+
+<h3>Por que a IA escalou</h3>
+{% if ai_decisions %}
+{% set last_decision = ai_decisions[-1] %}
+<p class="muted">
+    {{ last_decision.decision_type.value }} — {{ last_decision.ai_provider }} / {{ last_decision.ai_model }}
+    {% if last_decision.confidence is not none %} — confiança {{ "%.0f"|format(last_decision.confidence * 100) }}%{% endif %}
+</p>
+{% if last_decision.error_message %}<p class="muted">Erro: {{ last_decision.error_message }}</p>{% endif %}
+{% else %}
+<p class="muted">Nenhuma decisão de IA registrada.</p>
+{% endif %}
+
+{% if error %}<p style="color: var(--pico-del-color)">{{ error }}</p>{% endif %}
+
+<h3>Decisão manual</h3>
+<form method="post" action="/web/escalations/{{ occurrence.id }}">
+    {% if is_classification_stage %}
+    <p class="muted">Escalado antes da fila humana — decida o motivo do insucesso reportado pelo motorista.</p>
+    <label for="failure_reason">Motivo do insucesso</label>
+    <select id="failure_reason" name="failure_reason" required>
+        {% for reason in failure_reasons %}
+        <option value="{{ reason.value }}">{{ reason.value }}</option>
+        {% endfor %}
+    </select>
+    <p class="muted">Se o motivo for "refused", a ocorrência é encerrada direto (sem contatar o cliente); qualquer outro motivo segue para a fila humana normalmente.</p>
+    <button type="submit">Resolver</button>
+
+    {% else %}
+    <p class="muted">Escalado na resposta do cliente final — decida o desfecho.</p>
+    <label for="category">Resultado</label>
+    <select id="category" name="category" required onchange="
+        document.getElementById('new-address-fields').style.display = this.value === 'requests_new_address' ? 'block' : 'none';
+    ">
+        {% for cat in reply_categories %}
+        <option value="{{ cat.value }}">
+            {{ {'confirms_reschedule': 'Cliente confirmou reagendamento', 'definitive_refusal': 'Cliente recusou definitivamente', 'requests_new_address': 'Cliente pediu novo endereço'}[cat.value] }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <div id="new-address-fields" style="display:none;">
+        <label for="new_address_text">Novo endereço pedido pelo cliente</label>
+        <input type="text" id="new_address_text" name="new_address_text" value="{{ occurrence.new_address_text or '' }}">
+
+        <label for="within_radius">Está dentro do raio permitido pelo tenant ({{ tenant.allowed_radius_km }}km)?</label>
+        <select id="within_radius" name="within_radius">
+            <option value="true">Sim, aprovar novo endereço</option>
+            <option value="false">Não, manter como insucesso</option>
+        </select>
+    </div>
+
+    <button type="submit">Resolver</button>
+    {% endif %}
+</form>
+{% endblock %}

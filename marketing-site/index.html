@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heimdall Logtech — resolva insucesso de entrega no WhatsApp, sem contratar mais gente</title>
+    <meta name="description" content="A IA da Heimdall fala com o motorista e com o destinatário na hora do insucesso de entrega, direto no WhatsApp oficial — sua equipe só entra nos casos que realmente precisam de gente.">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Heimdall Logtech">
+    <meta property="og:title" content="Heimdall Logtech — insucesso de entrega resolvido em segundos, sem contratar mais gente">
+    <meta property="og:description" content="A IA da Heimdall fala com o motorista e com o destinatário na hora do insucesso de entrega, direto no WhatsApp oficial da Meta — sua equipe só entra nos casos que realmente precisam de gente.">
+    <meta property="og:image" content="https://heimdall-logtech.com/assets/heimdall-og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="pt_BR">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Heimdall Logtech — insucesso de entrega resolvido em segundos">
+    <meta name="twitter:description" content="A IA fala com motorista e destinatário direto no WhatsApp oficial — sua equipe só entra no que precisa de gente de verdade.">
+    <meta name="twitter:image" content="https://heimdall-logtech.com/assets/heimdall-og.png">
+    <meta name="theme-color" content="#060607">
+
+    <link rel="canonical" href="https://heimdall-logtech.com/">
+    <link rel="icon" type="image/png" href="assets/heimdall-icon.png">
+    <link rel="stylesheet" href="style.css?v=20260711j">
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="container">
+            <a href="#top" class="brand">
+                <span class="heimdall-emblem heimdall-emblem--header"><img src="assets/heimdall-icon.png" alt="Heimdall Logtech"></span>
+                <span class="brand-name">HEIMDALL<small>LOGTECH</small></span>
+            </a>
+            <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Abrir menu" aria-expanded="false">☰</button>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="#como-funciona">Como funciona</a></li>
+                <li><a href="#exemplo">Veja funcionando</a></li>
+                <li><a href="#diferenciais">Diferenciais</a></li>
+                <li><a href="#preco">Preço</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="https://motorista.heimdall-logtech.com" class="btn btn-ghost">Sou motorista</a></li>
+                <li><a href="https://app.heimdall-logtech.com/web/login" class="btn btn-ghost">Sou operador</a></li>
+                <li><a href="https://wa.me/5500000000000?text=Quero%20conhecer%20o%20Heimdall" class="btn btn-primary" target="_blank" rel="noopener">Agendar demo<span class="btn-icon">→</span></a></li>
+            </ul>
+        </div>
+    </header>
+
+    <main id="top">
+        <section class="hero-section">
+            <div class="hero-bg-video">
+                <video autoplay muted loop playsinline preload="auto">
+                    <source src="assets/heimdall-hero-video.mp4" type="video/mp4">
+                </video>
+                <div class="hero-bg-overlay"></div>
+            </div>
+            <canvas id="hero-particles" class="hero-particles"></canvas>
+            <div class="container hero-grid">
+                <div class="hero-copy">
+                    <span class="heimdall-emblem heimdall-emblem--hero intro-in" style="animation-delay: 0.05s"><img src="assets/heimdall-icon.png" alt="Heimdall Logtech"></span>
+                    <span class="eyebrow intro-in" style="animation-delay: 0.15s">Especialista em insucesso de entrega last-mile</span>
+                    <h1 class="intro-in" style="animation-delay: 0.28s">Insucesso de entrega, <span class="hl">resolvido em segundos</span> — sem contratar mais ninguém.</h1>
+                    <p class="lead intro-in" style="animation-delay: 0.44s">
+                        A IA fala com o motorista e com o destinatário direto no WhatsApp — reagenda, corrige
+                        endereço, confirma recusa. Sua equipe só entra nos casos que realmente precisam de
+                        julgamento humano.
+                    </p>
+                    <div class="hero-actions intro-in" style="animation-delay: 0.58s">
+                        <a href="https://wa.me/5500000000000?text=Quero%20conhecer%20o%20Heimdall" class="btn btn-primary" target="_blank" rel="noopener">Falar no WhatsApp<span class="btn-icon">→</span></a>
+                        <a href="#exemplo" class="btn btn-ghost">Explorar outros casos</a>
+                    </div>
+                    <p class="hero-note intro-in" style="animation-delay: 0.7s">WhatsApp Business oficial da Meta — sem risco de banimento de gateway não-oficial.</p>
+                </div>
+                <div class="hero-visual intro-in" style="animation-delay: 0.5s">
+                    <div class="orb-icon orb-1" title="WhatsApp oficial">💬</div>
+                    <div class="orb-icon orb-2" title="Resolvido em segundos">⚡</div>
+                    <div class="orb-icon orb-3" title="Sem app novo">📷</div>
+                    <div class="phone-shell">
+                        <div class="phone-topbar"><span class="dot"></span> Heimdall · WhatsApp do motorista</div>
+                        <div class="phone-body" id="hero-phone-body"></div>
+                    </div>
+                    <div class="hero-float-card">
+                        <span class="icon">✅</span>
+                        <span class="text"><strong>Resolvido sem operador</strong><span>ocorrência #4821 · 31s</span></span>
+                    </div>
+                    <div class="hero-why-card">
+                        <strong>Por que Heimdall</strong>
+                        <ul>
+                            <li>WhatsApp oficial da Meta</li>
+                            <li>Resposta em segundos</li>
+                            <li>Auditoria de cada decisão</li>
+                        </ul>
+                    </div>
+                    <p class="hero-visual-caption">conversa real, rodando ao vivo — não é mockup estático</p>
+                </div>
+            </div>
+        </section>
+
+        <section style="padding: 3rem 0;">
+            <div class="container">
+                <div class="big-numbers">
+                    <div class="big-number reveal"><div class="value" data-count="100" data-suffix="%">0%</div><div class="label">WhatsApp oficial Meta</div></div>
+                    <div class="big-number reveal"><div class="value">Segundos</div><div class="label">vs. horas do processo manual</div></div>
+                    <div class="big-number reveal"><div class="value" data-count="1500" data-prefix="R$">R$0</div><div class="label">a partir de, por mês</div></div>
+                    <div class="big-number reveal"><div class="value" data-count="0">0</div><div class="label">apps novos pro motorista instalar</div></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="como-funciona">
+            <div class="container">
+                <div class="section-head reveal">
+                    <span class="eyebrow-sm">Como funciona</span>
+                    <h2>Do insucesso à resolução, sem ninguém precisar entrar no meio</h2>
+                </div>
+                <div class="numbered-steps">
+                    <div class="numbered-step reveal">
+                        <span class="num">01</span>
+                        <div class="body">
+                            <h3>Motorista reporta pelo WhatsApp</h3>
+                            <p>Sem app novo pra instalar, sem ligação — o motorista manda o motivo do insucesso como já manda qualquer mensagem.</p>
+                        </div>
+                    </div>
+                    <div class="numbered-step reveal">
+                        <span class="num">02</span>
+                        <div class="body">
+                            <h3>A IA conversa com quem precisa</h3>
+                            <p>Classifica o motivo, contata o destinatário, propõe reagendamento ou novo endereço — tudo dentro das regras que sua operação define.</p>
+                        </div>
+                    </div>
+                    <div class="numbered-step reveal">
+                        <span class="num">03</span>
+                        <div class="body">
+                            <h3>Resolvido em segundos, com auditoria completa</h3>
+                            <p>Só escala pra um humano o que realmente precisa de julgamento — e cada decisão da IA fica registrada pra você conferir depois.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-alt">
+            <div class="container">
+                <div class="section-head reveal">
+                    <span class="eyebrow-sm">O custo que ninguém vê na planilha</span>
+                    <h2>Monitorar insucesso manualmente custa mais do que parece</h2>
+                    <p>Uma base típica mantém 3 a 4 pessoas só de plantão pra tratar insucesso de entrega — ligar pro motorista, ligar pro cliente, decidir reentrega.</p>
+                </div>
+                <div class="stat-grid">
+                    <div class="stat-bubble stat-red reveal">
+                        <span class="stat-icon">💸</span>
+                        <span class="stat-text"><span class="stat-value">R$12–16 mil</span><span class="stat-label">custo/mês com equipe dedicada</span></span>
+                    </div>
+                    <div class="stat-bubble stat-amber reveal">
+                        <span class="stat-icon">🕒</span>
+                        <span class="stat-text"><span class="stat-value">horas</span><span class="stat-label">tempo médio de resolução manual</span></span>
+                    </div>
+                    <div class="stat-bubble stat-green reveal">
+                        <span class="stat-icon">⚡</span>
+                        <span class="stat-text"><span class="stat-value">segundos</span><span class="stat-label">tempo de resolução com Heimdall</span></span>
+                    </div>
+                    <div class="stat-bubble reveal">
+                        <span class="stat-icon">🏷️</span>
+                        <span class="stat-text"><span class="stat-value">a partir de R$1.500</span><span class="stat-label">preço fixo Heimdall/mês</span></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="exemplo">
+            <div class="container">
+                <div class="section-head reveal">
+                    <span class="eyebrow-sm">Veja funcionando</span>
+                    <h2>Escolha um motivo de insucesso e veja a conversa de verdade</h2>
+                    <p>Exatamente como aparece no WhatsApp do motorista — sem ator, sem edição.</p>
+                </div>
+                <div class="demo-tabs" id="demo-tabs">
+                    <button type="button" class="demo-tab active" data-demo="endereco">Endereço errado</button>
+                    <button type="button" class="demo-tab" data-demo="ausente">Cliente ausente</button>
+                    <button type="button" class="demo-tab" data-demo="risco">Área de risco</button>
+                    <button type="button" class="demo-tab" data-demo="ambiguo">Caso ambíguo</button>
+                </div>
+                <div class="phone-shell">
+                    <div class="phone-topbar"><span class="dot"></span> Heimdall · WhatsApp do motorista</div>
+                    <div class="phone-body" id="phone-body"></div>
+                </div>
+                <div class="demo-result" id="demo-result"></div>
+            </div>
+        </section>
+
+        <section id="diferenciais" class="section-alt">
+            <div class="container">
+                <div class="section-head reveal">
+                    <span class="eyebrow-sm">Por que Heimdall</span>
+                    <h2>Feito pra um problema só, não pra tudo</h2>
+                </div>
+                <div class="diff-grid">
+                    <div class="diff-card reveal" data-tilt>
+                        <span class="icon">🎯</span>
+                        <h3>Especialista, não genérico</h3>
+                        <p>Resolve insucesso de entrega last-mile — não é chatbot de propósito geral adaptado às pressas.</p>
+                    </div>
+                    <div class="diff-card reveal" data-tilt>
+                        <span class="icon">✅</span>
+                        <h3>WhatsApp oficial da Meta</h3>
+                        <p>Cloud API business — sem o risco de banimento que ronda gateway não-oficial.</p>
+                    </div>
+                    <div class="diff-card reveal" data-tilt>
+                        <span class="icon">⚡</span>
+                        <h3>Modo full, sem operador</h3>
+                        <p>Pensado pra base pequena, que não tem gente sobrando pra ficar de plantão.</p>
+                    </div>
+                    <div class="diff-card reveal" data-tilt>
+                        <span class="icon">📋</span>
+                        <h3>Auditoria de cada decisão</h3>
+                        <p>Toda decisão da IA fica registrada — importante pra prestar contas a embarcador/contratante.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="preco">
+            <div class="container">
+                <div class="section-head reveal">
+                    <span class="eyebrow-sm">Preço</span>
+                    <h2>Valor fixo por porte de base — sem plano por feature</h2>
+                    <p>Ancorado no que sua operação já gasta com monitoramento manual, não em quantas funções você usa.</p>
+                </div>
+                <div class="pricing-grid">
+                    <div class="price-card reveal" data-tilt>
+                        <div class="tier-name">Pequena</div>
+                        <div class="tier-fleet">até ~20 motoristas</div>
+                        <div class="tier-price">R$1.500<span>/mês</span></div>
+                        <div class="tier-saved">economia líquida de R$2.500–6.500/mês</div>
+                        <ul>
+                            <li>Resolução automática no WhatsApp</li>
+                            <li>Reagendamento e correção de endereço</li>
+                            <li>Trilha de auditoria completa</li>
+                        </ul>
+                        <a href="https://wa.me/5500000000000?text=Quero%20conhecer%20o%20plano%20Pequena" class="btn btn-ghost" target="_blank" rel="noopener">Falar com a gente</a>
+                    </div>
+                    <div class="price-card featured reveal" data-tilt>
+                        <span class="tier-badge">popular</span>
+                        <div class="tier-name">Média</div>
+                        <div class="tier-fleet">até ~60 motoristas</div>
+                        <div class="tier-price">R$3.000<span>/mês</span></div>
+                        <div class="tier-saved">economia líquida de R$5.000–9.000/mês</div>
+                        <ul>
+                            <li>Tudo do plano Pequena</li>
+                            <li>Modo full (sem operador humano)</li>
+                            <li>Suporte prioritário na implantação</li>
+                        </ul>
+                        <a href="https://wa.me/5500000000000?text=Quero%20conhecer%20o%20plano%20M%C3%A9dia" class="btn btn-primary" target="_blank" rel="noopener">Falar com a gente<span class="btn-icon">→</span></a>
+                    </div>
+                    <div class="price-card reveal" data-tilt>
+                        <div class="tier-name">Grande</div>
+                        <div class="tier-fleet">60+ motoristas</div>
+                        <div class="tier-price">R$5.000<span>/mês</span></div>
+                        <div class="tier-saved">economia líquida de R$7.000–11.000/mês</div>
+                        <ul>
+                            <li>Tudo do plano Média</li>
+                            <li>Onboarding dedicado</li>
+                            <li>Revisão de volume incluída</li>
+                        </ul>
+                        <a href="https://wa.me/5500000000000?text=Quero%20conhecer%20o%20plano%20Grande" class="btn btn-ghost" target="_blank" rel="noopener">Falar com a gente</a>
+                    </div>
+                </div>
+                <p class="pricing-note">Preço final ajustado numa conversa rápida de 15 minutos — cada operação tem um porte real diferente da planilha.</p>
+            </div>
+        </section>
+
+        <section id="faq" class="section-alt">
+            <div class="container">
+                <div class="section-head reveal">
+                    <span class="eyebrow-sm">Perguntas frequentes</span>
+                    <h2>Antes de falar com a gente, você já deve estar pensando nisso</h2>
+                </div>
+                <div class="faq-list">
+                    <details class="faq-item reveal">
+                        <summary>E se a IA errar ou não souber o que fazer?</summary>
+                        <p>Ela não inventa resposta. Quando a confiança da classificação fica baixa ou o caso foge das regras que sua operação define, a ocorrência é escalada pra um operador humano — o card "caso ambíguo" na seção "Veja funcionando" acima mostra esse comportamento na prática.</p>
+                    </details>
+                    <details class="faq-item reveal">
+                        <summary>Preciso trocar o número de WhatsApp que já uso?</summary>
+                        <p>Não precisa ser o mesmo número pessoal — a integração usa a WhatsApp Cloud API oficial da Meta, o canal business da própria Meta, então é o número da operação que passa a operar por ali, sem depender de gateway não-oficial (que corre risco de banimento).</p>
+                    </details>
+                    <details class="faq-item reveal">
+                        <summary>O motorista precisa instalar algum app?</summary>
+                        <p>Não, no fluxo principal (planilha de rota) o motorista só manda mensagem de WhatsApp como já manda hoje. O app Android é opcional, pra quem não tem planilha de rota nenhuma (distribuidoras) e reporta a entrega por nota fiscal.</p>
+                    </details>
+                    <details class="faq-item reveal">
+                        <summary>Como eu confio que a IA tomou a decisão certa?</summary>
+                        <p>Toda decisão automática fica registrada numa trilha de auditoria — dá pra conferir depois exatamente o que foi decidido e por quê, importante pra prestar contas a quem contrata o frete.</p>
+                    </details>
+                    <details class="faq-item reveal">
+                        <summary>Quanto tempo leva pra colocar no ar?</summary>
+                        <p>A implantação em si é rápida — o gargalo normal é a aprovação dos templates de mensagem pela própria Meta, que segue o prazo deles, não o nosso. Isso é conversado na demo de 15 minutos.</p>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="container">
+                <div class="cta-band">
+                    <h2>Sua equipe atual foca no que precisa de gente. O resto, o Heimdall resolve sozinho.</h2>
+                    <p>Uma demo de 15 minutos mostra exatamente como isso funciona com a sua operação.</p>
+                    <a href="https://wa.me/5500000000000?text=Quero%20agendar%20uma%20demo%20do%20Heimdall" class="btn btn-primary" target="_blank" rel="noopener">Agendar demo no WhatsApp<span class="btn-icon">→</span></a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <span class="footer-brand">
+                <span class="heimdall-emblem heimdall-emblem--footer"><img src="assets/heimdall-icon.png" alt=""></span>
+                HEIMDALL LOGTECH
+            </span>
+            <ul class="footer-links">
+                <li><a href="https://wa.me/5500000000000" target="_blank" rel="noopener">WhatsApp</a></li>
+                <li><a href="mailto:contato@heimdall-logtech.com">contato@heimdall-logtech.com</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <script>
+        // --- Partículas douradas convergindo no fundo do hero (mesmo
+        // conceito visual do prompt de vídeo em docs/prompt_video_marketing_gemini.md,
+        // aqui em canvas leve enquanto o vídeo real não existe — trocar
+        // por <video> full-bleed quando o arquivo do Gemini estiver pronto). ---
+        (function () {
+            var canvas = document.getElementById("hero-particles");
+            if (!canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+            var ctx = canvas.getContext("2d");
+            var section = canvas.closest(".hero-section");
+            var particles = [];
+            var W, H, cx, cy;
+
+            function resize() {
+                W = canvas.width = section.offsetWidth;
+                H = canvas.height = section.offsetHeight;
+                cx = W * 0.72;
+                cy = H * 0.42;
+            }
+
+            function makeParticle() {
+                var angle = Math.random() * Math.PI * 2;
+                var radius = 260 + Math.random() * 220;
+                return {
+                    x: cx + Math.cos(angle) * radius,
+                    y: cy + Math.sin(angle) * radius,
+                    angle: angle,
+                    radius: radius,
+                    speed: 0.06 + Math.random() * 0.1,
+                    size: 0.8 + Math.random() * 1.8,
+                    alpha: 0.25 + Math.random() * 0.5,
+                };
+            }
+
+            resize();
+            window.addEventListener("resize", resize);
+            for (var i = 0; i < 70; i++) particles.push(makeParticle());
+
+            function tick() {
+                ctx.clearRect(0, 0, W, H);
+                particles.forEach(function (p) {
+                    p.angle += 0.0025;
+                    p.radius -= p.speed;
+                    if (p.radius < 20) {
+                        var fresh = makeParticle();
+                        p.angle = fresh.angle; p.radius = fresh.radius; p.alpha = fresh.alpha; p.size = fresh.size;
+                    }
+                    p.x = cx + Math.cos(p.angle) * p.radius;
+                    p.y = cy + Math.sin(p.angle) * p.radius * 0.6;
+                    var fade = Math.min(1, p.radius / 60);
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fillStyle = "rgba(201, 162, 75, " + (p.alpha * fade).toFixed(2) + ")";
+                    ctx.fill();
+                });
+                requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        })();
+
+        var navToggle = document.getElementById("nav-toggle");
+        var navLinks = document.getElementById("nav-links");
+        navToggle.addEventListener("click", function () {
+            var isOpen = navLinks.classList.toggle("open");
+            navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        });
+
+        // --- Exemplo interativo: simulador de conversa (dados reais de
+        // roteiro, sem chamar backend nenhum — só ilustra o fluxo). ---
+        var DEMOS = {
+            endereco: {
+                messages: [
+                    { who: "Motorista", side: "in", text: "Endereço não bate com o CEP, não consigo entregar" },
+                    { system: "IA classificando o motivo…" },
+                    { who: "Heimdall", side: "out", text: "Entendido. Vou confirmar o endereço certo com o destinatário agora." },
+                    { system: "Cliente respondeu em 18s: novo endereço a 1,2 km, dentro do raio permitido" },
+                    { who: "Heimdall", side: "out", text: "Endereço atualizado! Novo endereço: Rua das Palmeiras, 123. Pode seguir." },
+                ],
+                result: { badge: "badge-success", text: "Resolvido sem operador · 42s" },
+            },
+            ausente: {
+                messages: [
+                    { who: "Motorista", side: "in", text: "Cliente ausente, ninguém atende o interfone" },
+                    { system: "IA classificando o motivo…" },
+                    { who: "Heimdall", side: "out", text: "Registrado. Vou contatar o destinatário agora." },
+                    { system: "Cliente respondeu em 12s: \"Pode deixar com o porteiro\"" },
+                    { who: "Heimdall", side: "out", text: "Cliente autorizou deixar com o porteiro. Pode prosseguir com a entrega." },
+                ],
+                result: { badge: "badge-success", text: "Resolvido sem operador · 38s" },
+            },
+            risco: {
+                messages: [
+                    { who: "Motorista", side: "in", text: "Área de risco, não vou entrar agora" },
+                    { system: "IA classificando o motivo…" },
+                    { who: "Heimdall", side: "out", text: "Entendido — segurança em primeiro lugar. Registrado como recusa, sem contato com o cliente agora." },
+                    { system: "Ocorrência fechada — não exige julgamento humano" },
+                ],
+                result: { badge: "badge-success", text: "Resolvido sem operador · 9s" },
+            },
+            ambiguo: {
+                messages: [
+                    { who: "Motorista", side: "in", text: "Cheguei mas deu uma confusão aqui, não rolou" },
+                    { system: "IA classificando o motivo…" },
+                    { who: "Heimdall", side: "out", text: "Só pra confirmar: foi recusa do cliente, endereço errado ou outro motivo?" },
+                    { who: "Motorista", side: "in", text: "Na verdade acho que é outra coisa, deixa eu ver" },
+                    { system: "Confiança baixa após reperguntar — não inventa decisão sozinha" },
+                ],
+                result: { badge: "badge-progress", text: "Escalado pra operador humano · sem resposta inventada" },
+            },
+        };
+
+        var DEMO_ORDER = ["endereco", "ausente", "risco", "ambiguo"];
+
+        // Toca a conversa mensagem por mensagem, com indicador de
+        // "digitando..." antes de cada balão — bem mais vivo que só dar
+        // fade-in em tudo de uma vez. O token de execução fica NO PRÓPRIO
+        // elemento (bodyEl._runToken), não numa variável global — hero e
+        // demo interativo rodam em paralelo, cada um só cancela a si mesmo.
+        function playDemo(bodyEl, resultEl, demo, onDone) {
+            bodyEl._runToken = (bodyEl._runToken || 0) + 1;
+            var myToken = bodyEl._runToken;
+            bodyEl.innerHTML = "";
+            if (resultEl) resultEl.innerHTML = "";
+            var i = 0;
+            function step() {
+                if (myToken !== bodyEl._runToken || i >= demo.messages.length) {
+                    if (myToken === bodyEl._runToken && resultEl) {
+                        resultEl.innerHTML = "<span class=\"badge " + demo.result.badge + "\">" + demo.result.text + "</span>";
+                    }
+                    if (myToken === bodyEl._runToken && onDone) onDone();
+                    return;
+                }
+                var m = demo.messages[i];
+                var typing = document.createElement("div");
+                typing.className = "typing-indicator";
+                typing.innerHTML = "<span></span><span></span><span></span>";
+                bodyEl.appendChild(typing);
+                bodyEl.scrollTop = bodyEl.scrollHeight;
+                setTimeout(function () {
+                    if (myToken !== bodyEl._runToken) return;
+                    typing.remove();
+                    var el = document.createElement("div");
+                    if (m.system) {
+                        el.className = "chat-bubble chat-system";
+                        el.textContent = m.system;
+                    } else {
+                        el.className = "chat-bubble " + (m.side === "in" ? "chat-in" : "chat-out");
+                        el.innerHTML = "<span class=\"who\">" + m.who + "</span>" + m.text;
+                    }
+                    bodyEl.appendChild(el);
+                    bodyEl.scrollTop = bodyEl.scrollHeight;
+                    i++;
+                    setTimeout(step, 500);
+                }, m.system ? 550 : 850);
+            }
+            step();
+        }
+
+        var phoneBody = document.getElementById("phone-body");
+        var demoResult = document.getElementById("demo-result");
+        document.querySelectorAll(".demo-tab").forEach(function (tab) {
+            tab.addEventListener("click", function () {
+                document.querySelectorAll(".demo-tab").forEach(function (t) { t.classList.remove("active"); });
+                tab.classList.add("active");
+                playDemo(phoneBody, demoResult, DEMOS[tab.getAttribute("data-demo")]);
+            });
+        });
+        playDemo(phoneBody, demoResult, DEMOS.endereco);
+
+        // --- Mini-demo do hero: toca um caso, espera, passa pro próximo,
+        // em loop — prova o produto na primeira dobra sem precisar clicar. ---
+        var heroPhoneBody = document.getElementById("hero-phone-body");
+        var heroDemoIndex = 0;
+        function playHeroDemoLoop() {
+            var key = DEMO_ORDER[heroDemoIndex % DEMO_ORDER.length];
+            heroDemoIndex++;
+            playDemo(heroPhoneBody, null, DEMOS[key], function () {
+                setTimeout(playHeroDemoLoop, 2600);
+            });
+        }
+        if (heroPhoneBody) playHeroDemoLoop();
+
+        // --- Scroll reveal: IntersectionObserver liga ".in-view" na 1ª vez
+        // que o elemento entra na viewport (uma vez só, não re-anima ao
+        // rolar pra cima e voltar). ---
+        var revealObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add("in-view");
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15 });
+        document.querySelectorAll(".reveal").forEach(function (el) { revealObserver.observe(el); });
+
+        // --- Números que contam ao entrar na tela ([data-count]) ---
+        var countObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return;
+                countObserver.unobserve(entry.target);
+                var el = entry.target;
+                var target = parseInt(el.getAttribute("data-count"), 10);
+                var prefix = el.getAttribute("data-prefix") || "";
+                var suffix = el.getAttribute("data-suffix") || "";
+                var start = performance.now();
+                var duration = 1100;
+                function tick(now) {
+                    var progress = Math.min(1, (now - start) / duration);
+                    var eased = 1 - Math.pow(1 - progress, 3);
+                    var current = Math.round(target * eased);
+                    el.textContent = prefix + current.toLocaleString("pt-BR") + suffix;
+                    if (progress < 1) requestAnimationFrame(tick);
+                }
+                requestAnimationFrame(tick);
+            });
+        }, { threshold: 0.5 });
+        document.querySelectorAll("[data-count]").forEach(function (el) { countObserver.observe(el); });
+
+        // --- Tilt 3D leve nos cartões, seguindo o mouse ---
+        document.querySelectorAll("[data-tilt]").forEach(function (card) {
+            card.addEventListener("mousemove", function (e) {
+                var rect = card.getBoundingClientRect();
+                var px = (e.clientX - rect.left) / rect.width - 0.5;
+                var py = (e.clientY - rect.top) / rect.height - 0.5;
+                card.style.setProperty("--rx", (px * 8).toFixed(2) + "deg");
+                card.style.setProperty("--ry", (py * -8).toFixed(2) + "deg");
+            });
+            card.addEventListener("mouseleave", function () {
+                card.style.setProperty("--rx", "0deg");
+                card.style.setProperty("--ry", "0deg");
+            });
+        });
+
+        // --- Toast de prova social — reaparece a cada 15s, mesmo
+        // componente visual do dashboard (heimdall-toast). ---
+        var toastMessages = [
+            "Ocorrência #4821 resolvida sem operador · 31s",
+            "Novo endereço confirmado automaticamente · 27s",
+            "Cliente respondeu e entrega foi reagendada · 19s",
+        ];
+        var toastIndex = 0;
+        function showToast() {
+            var existing = document.querySelector(".heimdall-toast");
+            if (existing) existing.remove();
+            var toast = document.createElement("div");
+            toast.className = "heimdall-toast";
+            toast.innerHTML = "✅ " + toastMessages[toastIndex % toastMessages.length];
+            document.body.appendChild(toast);
+            toastIndex++;
+            setTimeout(function () { toast.remove(); }, 5000);
+        }
+        setTimeout(showToast, 2500);
+        setInterval(showToast, 15000);
+    </script>
+</body>
+</html>

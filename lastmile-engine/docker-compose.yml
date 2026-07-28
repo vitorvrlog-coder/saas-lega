@@ -1,0 +1,37 @@
+# Não sobe Postgres nem evolution-go próprios — reaproveita a infraestrutura
+# já rodando no docker-compose do whatsapp-saas (mesmo Postgres físico, com
+# database/usuário isolados; mesmo container evolution-go). Por isso a rede
+# abaixo é "external": esse compose só funciona com o stack whatsapp-saas já
+# de pé (docker compose up no diretório dele primeiro).
+
+services:
+  api:
+    build:
+      context: .
+    container_name: lastmile-engine-api
+    restart: unless-stopped
+
+    ports:
+      - "8001:8000"
+
+    env_file:
+      - .env
+
+    # Sobrescreve o .env (pensado pra rodar a app direto no host, fora de
+    # container, durante desenvolvimento) com os hostnames resolvíveis de
+    # dentro da rede docker. `environment:` tem precedência sobre `env_file:`.
+    environment:
+      DATABASE_URL: postgresql+asyncpg://lastmile:lastmile@postgres:5432/lastmile_engine
+      EVOLUTION_BASE_URL: http://whatsapp-saas-evolution-go:8080
+      # Ollama roda nativo no host neste ambiente (não em container).
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      # Endereço deste container na rede docker — é assim que o
+      # evolution-go (também nessa rede) alcança nosso webhook.
+      WEBHOOK_BASE_URL: http://lastmile-engine-api:8000
+
+    networks:
+      - whatsapp-saas_default
+
+networks:
+  whatsapp-saas_default:
+    external: true

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% set show_nav = false %}
+{% block title %}Login — Heimdall Logtech{% endblock %}
+{% block content %}
+<div class="login-screen">
+    <div class="login-card">
+        <span class="heimdall-emblem heimdall-emblem--lg">
+            <img src="/static/img/heimdall-icon.png?v={{ static_version('img/heimdall-icon.png') }}" alt="Heimdall Logtech">
+        </span>
+        <h2 class="login-title">HEIMDALL <small>LOGTECH</small></h2>
+        <p class="login-subtitle">Painel operacional · Last mile B2C</p>
+
+        {% if error %}<p class="login-error">{{ error }}</p>{% endif %}
+
+        <form method="post" action="/web/login">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" required autofocus autocapitalize="none" autocorrect="off" spellcheck="false">
+            <label for="password">Senha</label>
+            <input type="password" id="password" name="password" required>
+            <button type="submit">Entrar</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

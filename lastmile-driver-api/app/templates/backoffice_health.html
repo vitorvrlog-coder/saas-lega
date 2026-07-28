@@ -1,0 +1,64 @@
+{% extends "backoffice_base.html" %}
+{% block title %}Saúde dos tenants — Backoffice Heimdall{% endblock %}
+{% block content %}
+
+<div class="hero">
+    <div>
+        <h1>Saúde dos tenants</h1>
+        <p class="muted">Status da conexão WhatsApp e volume de mensagens/IA nas últimas {{ health.window_hours }}h, por transportadora ativa.</p>
+    </div>
+</div>
+
+<article>
+    {% if health.rows %}
+    <div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Transportadora</th>
+                <th>WhatsApp</th>
+                <th>Mensagens ({{ health.window_hours }}h)</th>
+                <th>Decisões de IA ({{ health.window_hours }}h)</th>
+                <th>Schema inválido</th>
+                <th>Escalado p/ humano</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in health.rows %}
+            <tr>
+                <td><a href="/backoffice/tenants/{{ row.tenant.id }}">{{ row.tenant.name }}</a></td>
+                <td>
+                    {% if row.whatsapp_connected is true %}
+                    <span class="badge badge-success">Conectado</span>
+                    {% elif row.whatsapp_connected is false %}
+                    <span class="badge badge-escalated">Desconectado</span>
+                    {% else %}
+                    <span class="badge badge-muted" title="{{ row.whatsapp_error }}">Erro no gateway</span>
+                    {% endif %}
+                </td>
+                <td>{{ row.message_count_24h }}</td>
+                <td>{{ row.ai_decision_count_24h }}</td>
+                <td>
+                    {% if row.ai_invalid_schema_count_24h %}
+                    <span class="badge badge-escalated">{{ row.ai_invalid_schema_count_24h }}</span>
+                    {% else %}
+                    0
+                    {% endif %}
+                </td>
+                <td>
+                    {% if row.ai_escalated_count_24h %}
+                    <span class="badge badge-waiting">{{ row.ai_escalated_count_24h }}</span>
+                    {% else %}
+                    0
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="muted">Nenhuma transportadora ativa cadastrada ainda.</p>
+    {% endif %}
+</article>
+{% endblock %}

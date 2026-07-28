@@ -1,0 +1,29 @@
+services:
+  api:
+    build:
+      context: .
+    container_name: heimdall-driver-api
+    restart: unless-stopped
+
+    environment:
+      DATABASE_URL: postgresql+asyncpg://lastmile_driver:zwOqYohR6IDVu8wNF07XV1pmtsct32W@heimdall-postgres:5432/lastmile_driver_app
+      AI_PROVIDER: ollama
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: qwen2.5:3b
+      WEBHOOK_BASE_URL: https://driverapp.heimdall-logtech.com
+      TESSERACT_CMD: /usr/bin/tesseract
+      TESSDATA_PREFIX: /usr/share/tesseract-ocr/5/tessdata
+      ENVIRONMENT: production
+      LOG_LEVEL: INFO
+      SECRET_KEY: b58741bc15bd5f1c1d62aeec1e6db4f0baea3ecb1eb6997ba8ea686377704dc4
+      INTERNAL_API_KEY: 64e59c885ce671502731d5bc11ec22d7585a8c9a142da4967ef1eaf4698381e9
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    networks:
+      - opc_heimdall_net
+
+networks:
+  opc_heimdall_net:
+    external: true

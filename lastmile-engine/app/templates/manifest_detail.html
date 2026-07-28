@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ manifest.filename }} — Heimdall Logtech{% endblock %}
+{% block content %}
+<h2>{{ manifest.filename }}</h2>
+<p class="muted">Rota de {{ manifest.route_date }} — importada em {{ manifest.created_at | local_dt }}</p>
+
+{% if entries %}
+<div class="table-wrap">
+<table>
+    <thead>
+        <tr>
+            <th>Parada</th>
+            <th>Motorista</th>
+            <th>Cliente</th>
+            <th>Telefone do cliente</th>
+            <th>Endereço</th>
+            <th>ID da rota</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for entry in entries %}
+        <tr>
+            <td>{{ entry.stop_number }}</td>
+            <td>{{ entry.driver_phone }}</td>
+            <td>{{ entry.customer_name or "—" }}</td>
+            <td>{{ entry.customer_phone or "—" }}</td>
+            <td>{{ entry.address or "—" }}</td>
+            <td>{{ entry.route_id or "—" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<p>Nenhuma linha nessa planilha.</p>
+{% endif %}
+{% endblock %}

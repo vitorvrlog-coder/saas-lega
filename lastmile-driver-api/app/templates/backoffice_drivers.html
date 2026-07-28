@@ -1,0 +1,181 @@
+{% extends "backoffice_base.html" %}
+{% block title %}Motoristas assinantes — Backoffice Heimdall{% endblock %}
+{% block content %}
+<h2>Motoristas assinantes</h2>
+<p class="muted">Motoristas do produto low ticket (app de nota fiscal) que já entraram no app pelo menos uma vez, de todas as transportadoras.</p>
+
+{% if drivers_with_tenant %}
+<div class="table-wrap">
+<table>
+    <thead>
+        <tr>
+            <th>Transportadora</th>
+            <th>Nome</th>
+            <th>Telefone</th>
+            <th>Veículo</th>
+            <th>Status</th>
+            <th>Notas</th>
+            <th>Ocorrências</th>
+            <th>Mensagens</th>
+            <th>Adesão</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for driver, tenant in drivers_with_tenant %}
+        {% set stats = driver_stats.get(driver.id, {}) %}
+        {% set subscription = subscriptions.get(driver.id) %}
+        <tr>
+            <td><a href="/backoffice/tenants/{{ tenant.id }}">{{ tenant.name }}</a></td>
+            <td>{{ driver.name or '—' }}</td>
+            <td>{{ driver.phone }}</td>
+            <td>
+                {% if driver.vehicle_plate or driver.vehicle_type %}
+                {{ driver.vehicle_plate or '' }} {{ driver.vehicle_type or '' }}
+                {% else %}
+                <span class="muted">—</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if driver.is_active %}
+                <span class="badge badge-success">Ativo</span>
+                {% else %}
+                <span class="badge badge-muted">Inativo</span>
+                {% endif %}
+            </td>
+            <td>{{ stats.get('invoices', 0) }}</td>
+            <td>{{ stats.get('occurrences', 0) }}</td>
+            <td>{{ stats.get('messages', 0) }}</td>
+            <td>
+                {% if subscription %}
+                    {% if subscription.status.value == 'active' %}
+                    <span class="badge badge-success">Em dia</span>
+                    {% elif subscription.status.value == 'pending' %}
+                    <span class="badge badge-progress">Pendente</span>
+                    {% elif subscription.status.value == 'overdue' %}
+                    <span class="badge badge-muted" style="color: var(--pico-del-color);">Vencida</span>
+                    {% else %}
+                    <span class="badge badge-muted">Cancelada</span>
+                    {% endif %}
+                {% else %}
+                <span class="muted">Sem adesão</span>
+                {% endif %}
+            </td>
+            <td>
+                <details class="dropdown row-actions">
+                    <summary role="button" class="secondary outline">Ações ▾</summary>
+                    <ul>
+                        {% if not subscription %}
+                        <li>
+                            <form method="post" action="/backoffice/drivers/{{ driver.id }}/start-subscription" style="margin:0; display:flex; flex-wrap:wrap; gap:0.25rem;">
+                                {% if not driver.cpf %}
+                                <input type="text" name="cpf" placeholder="CPF (só números)" maxlength="11" required style="margin:0; flex:1 1 140px;">
+                                {% endif %}
+                                <button type="submit" class="secondary outline">Iniciar cobrança</button>
+                            </form>
+                        </li>
+                        {% endif %}
+                        <li>
+                            <form method="post" action="/backoffice/drivers/{{ driver.id }}/toggle-active" style="margin:0;">
+                                <button type="submit" class="secondary outline">
+                                    {{ 'Desativar' if driver.is_active else 'Ativar' }}
+                                </button>
+                            </form>
+                        </li>
+                        <li>
+                            <form method="post" action="/backoffice/drivers/{{ driver.id }}/delete" style="margin:0;"
+                                  onsubmit="return confirm('Remover definitivamente {{ driver.name or driver.phone }}? Só é possível se ele nunca teve nota fiscal vinculada. Essa ação não pode ser desfeita.');">
+                                <button type="submit" class="contrast outline">Remover</button>
+                            </form>
+                        </li>
+                    </ul>
+                </details>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">Nenhum motorista cadastrado ainda.</p>
+{% endif %}
+
+{% if driver_error %}<p style="color: var(--pico-del-color)">{{ driver_error }}</p>{% endif %}
+
+{% if unlinked_drivers %}
+<article>
+    <header><strong>Sem transportadora vinculada</strong></header>
+    <p class="muted">Cadastrados, mas ainda sem transportadora associada — associe assim que ela existir na plataforma.</p>
+    <div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Telefone</th>
+                <th>Vincular a</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for driver in unlinked_drivers %}
+            <tr>
+                <td>{{ driver.name or '—' }}</td>
+                <td>{{ driver.phone }}</td>
+                <td>
+                    <form method="post" action="/backoffice/drivers/{{ driver.id }}/assign-tenant" style="margin:0; display:flex; gap:0.25rem;">
+                        <select name="tenant_id" required style="margin:0;">
+                            <option value="" disabled selected>Selecione...</option>
+                            {% for tenant in tenants %}
+                            <option value="{{ tenant.id }}">{{ tenant.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="secondary outline">Vincular</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</article>
+{% endif %}
+
+<article>
+    <header><strong>Cadastrar motorista</strong></header>
+    <form method="post" action="/backoffice/drivers">
+        <label for="driver_tenant_name">Transportadora (opcional)</label>
+        <input type="text" id="driver_tenant_name" name="tenant_name" list="tenant-datalist"
+               placeholder="Digite pra buscar — deixe em branco se ainda não souber">
+        <datalist id="tenant-datalist">
+            {% for tenant in tenants %}
+            <option value="{{ tenant.name }}">
+            {% endfor %}
+        </datalist>
+        <p class="muted" style="margin-top:-0.5rem;">
+            Sem transportadora cadastrada ainda? Deixe em branco — o motorista fica pendente de vínculo
+            (veja a lista acima) até você associar depois.
+        </p>
+
+        <div class="grid">
+            <div>
+                <label for="driver_phone">Telefone (com DDI/DDD)</label>
+                <input type="text" id="driver_phone" name="phone" placeholder="5547999999999" required>
+            </div>
+            <div>
+                <label for="driver_name">Nome</label>
+                <input type="text" id="driver_name" name="name">
+            </div>
+        </div>
+        <div class="grid">
+            <div>
+                <label for="driver_vehicle_plate">Placa do veículo</label>
+                <input type="text" id="driver_vehicle_plate" name="vehicle_plate">
+            </div>
+            <div>
+                <label for="driver_vehicle_type">Tipo de veículo</label>
+                <input type="text" id="driver_vehicle_type" name="vehicle_type">
+            </div>
+        </div>
+        <button type="submit" class="secondary">Cadastrar motorista</button>
+    </form>
+</article>
+{% endblock %}

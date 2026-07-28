@@ -1,0 +1,829 @@
+/* --- Marca Heimdall Logtech --- */
+:root {
+    --heimdall-gold: #c9a24b;
+    --heimdall-gold-hover: #b6913f;
+    --heimdall-font-display: "Space Grotesk", var(--pico-font-family, sans-serif);
+    /* Fundo "quente" pras molduras da logo — a cor de card padrão do Pico
+    no tema escuro é um azul-acinzentado frio que choca com o dourado. */
+    --heimdall-frame-bg: #fdfbf6;
+}
+
+[data-theme="dark"] {
+    --heimdall-frame-bg: #201a10;
+}
+
+/* htmx não injeta CSS própria (só carregamos o JS) — sem isso, elementos
+   .htmx-indicator ficam sempre visíveis em vez de só durante a requisição. */
+.htmx-indicator { opacity: 0; transition: opacity 200ms ease; }
+.htmx-request.htmx-indicator, .htmx-request .htmx-indicator { opacity: 1; }
+
+/* Anel de foco dourado nos campos, no lugar do azul padrão do Pico — a
+única coisa que quebrava a identidade visual em telas com formulário. */
+input:focus, textarea:focus, select:focus {
+    border-color: var(--heimdall-gold) !important;
+    box-shadow: 0 0 0 3px rgba(201, 162, 75, 0.25) !important;
+}
+
+/* --- Emblema da marca ---
+   Moldura circular dourada reaproveitada em qualquer lugar que mostre a
+   logo em destaque (header, login) — um componente só, em vez de cada
+   tela redefinir tamanho/borda/sombra por conta própria e correr o risco
+   de desalinhar visualmente. --sm é o tamanho do header; --lg é o do
+   cartão de login. */
+.heimdall-emblem {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 999px;
+    border: 2px solid var(--heimdall-gold);
+    background: var(--heimdall-frame-bg);
+    box-shadow: 0 2px 8px rgba(201, 162, 75, 0.35), 0 0 0 3px rgba(201, 162, 75, 0.08);
+    padding: 0.45rem;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.heimdall-emblem img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* A logo já é um PNG com fundo transparente de verdade (recortado por
+alpha, sem hack de blend-mode) — só precisa inverter as cores (preto vira
+branco) pra aparecer no tema escuro. */
+[data-theme="dark"] .heimdall-emblem img,
+[data-theme="dark"] .site-footer-logo {
+    filter: invert(1);
+}
+
+.heimdall-emblem--sm {
+    width: 3.1rem;
+    height: 3.1rem;
+}
+
+.heimdall-emblem--lg {
+    width: 6rem;
+    height: 6rem;
+    border-width: 3px;
+    padding: 1.15rem;
+    box-shadow: 0 4px 20px rgba(201, 162, 75, 0.4), 0 0 0 6px rgba(201, 162, 75, 0.08);
+}
+
+.brand:hover .heimdall-emblem--sm {
+    box-shadow: 0 2px 14px rgba(201, 162, 75, 0.55), 0 0 0 6px rgba(201, 162, 75, 0.12);
+    transform: scale(1.04);
+}
+
+h1, h2, h3, h4, h5, h6, .brand-name, .stat-value {
+    font-family: var(--heimdall-font-display);
+}
+
+/* Textura de fundo bem sutil — não compete com o conteúdo, só dá
+profundidade. Um leve gradiente radial dourado no canto superior. */
+body {
+    background-image:
+        radial-gradient(circle at 12% -10%, rgba(201, 162, 75, 0.10), transparent 45%),
+        radial-gradient(circle at 100% 0%, rgba(201, 162, 75, 0.06), transparent 40%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+/* Espaço pro cabeçalho fixo não cobrir o conteúdo — só nas páginas que de
+fato têm header (login não tem, show_nav=false). */
+body.with-chrome {
+    padding-top: 7rem;
+}
+
+/* --- Rodapé (fluxo normal, rola com a página) --- */
+.site-footer {
+    background: var(--pico-background-color);
+    border-top: 1px solid rgba(201, 162, 75, 0.25);
+    padding: 0.65rem 0;
+    margin-top: 2rem;
+}
+
+.site-footer-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+}
+
+.site-footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--heimdall-font-display);
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--heimdall-gold);
+    letter-spacing: 0.06em;
+}
+
+.site-footer-logo {
+    width: 1.4rem;
+    height: 1.4rem;
+    object-fit: contain;
+}
+
+.site-footer .muted {
+    font-size: 0.78rem;
+}
+
+/* --- Tela de login --- */
+.login-screen {
+    min-height: calc(100vh - 8rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--pico-card-background-color);
+    border: 1px solid var(--pico-muted-border-color);
+    border-radius: calc(var(--pico-border-radius) * 2);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.16), 0 4px 16px rgba(201, 162, 75, 0.08);
+    padding: 2.75rem 2.5rem 2.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Faixa dourada decorativa no topo do cartão de login. */
+.login-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--heimdall-gold-hover), var(--heimdall-gold), var(--heimdall-gold-hover));
+}
+
+.login-card .heimdall-emblem {
+    margin: 0.25rem auto 1.25rem;
+}
+
+.login-title {
+    letter-spacing: 0.04em;
+    margin-bottom: 0.25rem;
+    color: var(--heimdall-gold);
+}
+
+.login-title small {
+    font-weight: 500;
+    color: var(--pico-muted-color);
+    letter-spacing: 0.15em;
+}
+
+.login-subtitle {
+    color: var(--pico-muted-color);
+    font-size: 0.85rem;
+    margin-bottom: 1.75rem;
+}
+
+.login-card form {
+    text-align: left;
+}
+
+.login-card form label {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.login-card form button[type="submit"] {
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.login-error {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.1);
+    border-radius: var(--pico-border-radius);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+/* --- Cabeçalho fixo --- */
+.site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--pico-background-color);
+    border-bottom: 1px solid rgba(201, 162, 75, 0.25);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    padding: 0.55rem 0;
+    z-index: 20;
+}
+
+.site-header nav {
+    margin-bottom: 0;
+    align-items: center;
+}
+
+/* Pílula de destaque nos itens do nav — hover sutil e estado "ativo" pra
+   quem já sabe em que seção está, em vez de só a cor do texto mudar. */
+.nav-links > li > a,
+.nav-dropdown > summary {
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.nav-links > li > a:hover,
+.nav-dropdown > summary:hover {
+    background: rgba(201, 162, 75, 0.1);
+}
+
+.nav-links > li > a.active,
+.nav-dropdown.active > summary {
+    background: rgba(201, 162, 75, 0.14);
+    color: var(--heimdall-gold);
+    font-weight: 600;
+}
+
+/* Botão hambúrguer — só aparece em telas estreitas (ver media query). */
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    width: 2.1rem;
+    height: 2.1rem;
+    background: none;
+    border: 1px solid var(--pico-muted-border-color);
+    border-radius: var(--pico-border-radius);
+    cursor: pointer;
+    padding: 0;
+}
+
+.nav-toggle span {
+    display: block;
+    width: 1.1rem;
+    height: 2px;
+    margin: 0 auto;
+    background: var(--heimdall-gold);
+    border-radius: 2px;
+}
+
+@media (max-width: 860px) {
+    .nav-toggle {
+        display: flex;
+    }
+
+    .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0 !important;
+        background: var(--pico-background-color);
+        border-bottom: 1px solid rgba(201, 162, 75, 0.25);
+        padding: 0.5rem 1rem 1rem;
+    }
+
+    .nav-links.open {
+        display: flex;
+    }
+
+    .nav-links li {
+        width: 100%;
+        margin: 0.3rem 0;
+    }
+
+    .nav-links form {
+        width: 100%;
+    }
+
+    .nav-links button[type="submit"] {
+        width: 100%;
+    }
+}
+
+@keyframes heimdall-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: heimdall-fade-in 0.35s ease-out;
+}
+
+/* Sobrescrever as variáveis --pico-primary-* não vence a cascata interna
+do framework em todos os casos, então os elementos "primary" (botões,
+links do header) são estilizados direto aqui, sem depender delas. */
+button[type="submit"]:not(.secondary):not(.outline),
+a[role="button"]:not(.secondary):not(.outline),
+input[type="submit"]:not(.secondary):not(.outline) {
+    background-color: var(--heimdall-gold) !important;
+    border-color: var(--heimdall-gold) !important;
+    color: #1a1204 !important;
+}
+
+button[type="submit"]:not(.secondary):not(.outline):hover,
+a[role="button"]:not(.secondary):not(.outline):hover,
+input[type="submit"]:not(.secondary):not(.outline):hover {
+    background-color: var(--heimdall-gold-hover) !important;
+    border-color: var(--heimdall-gold-hover) !important;
+}
+
+a:not([role="button"]) {
+    color: var(--heimdall-gold);
+}
+
+a:not([role="button"]):hover {
+    color: var(--heimdall-gold-hover);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+/* Evita que "Histórico de chamadas" (e outros links de mais de uma
+palavra) quebrem em duas linhas dentro do header. */
+.site-header nav a {
+    white-space: nowrap;
+}
+
+.site-header nav ul {
+    flex-wrap: nowrap;
+}
+
+.brand-name {
+    font-size: 1.1rem;
+}
+
+.brand-name {
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    line-height: 1.1;
+    color: var(--heimdall-gold) !important;
+}
+
+.brand-name small {
+    display: block;
+    font-weight: 500;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--pico-muted-color) !important;
+}
+
+.theme-toggle {
+    background: none;
+    border: 1px solid var(--pico-muted-border-color);
+    border-radius: 999px;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.theme-toggle:hover {
+    border-color: var(--heimdall-gold);
+}
+
+/* Ícone de configurações no header (engrenagem) — agrupa e-mail logado,
+   trocar senha e sair num menu só, em vez de espalhar cada um como item
+   separado no nav (ficava poluído com muitos links). */
+.settings-menu {
+    position: relative;
+}
+
+.settings-menu > summary {
+    list-style: none;
+}
+
+.settings-menu > summary::-webkit-details-marker,
+.settings-menu > summary::marker {
+    display: none;
+}
+
+.settings-menu > summary::after {
+    content: none !important;
+}
+
+.settings-menu > ul {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.5rem);
+    margin: 0;
+    padding: 0.6rem;
+    min-width: 210px;
+    list-style: none;
+    background: var(--heimdall-frame-bg);
+    border: 1px solid var(--pico-muted-border-color);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 30;
+}
+
+.settings-menu > ul li {
+    margin: 0.4rem 0;
+}
+
+.settings-menu > ul form {
+    margin: 0;
+}
+
+.settings-menu > ul button[type="submit"] {
+    width: 100%;
+}
+
+@media (max-width: 860px) {
+    .settings-menu > ul {
+        position: static;
+        box-shadow: none;
+        margin-top: 0.4rem;
+        width: 100%;
+    }
+}
+
+/* Menu de ações por linha de tabela (Operadores, backoffice e dashboard) —
+   classe própria em vez de reaproveitar .settings-menu (pensado pro ícone
+   do cabeçalho): aqui precisa se destacar como um cartão flutuante de
+   verdade sobre a linha da tabela, não se misturar com o conteúdo. */
+.row-actions {
+    position: relative;
+}
+
+.row-actions > summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.row-actions > summary::-webkit-details-marker,
+.row-actions > summary::marker {
+    display: none;
+}
+
+.row-actions > ul {
+    /* position:absolute é só o fallback sem JS (ou antes do 1º toggle) —
+       dentro de .table-wrap (overflow-x:auto) isso fica preso à caixa de
+       scroll e corta/esconde o menu (spec de overflow: overflow-x != visible
+       força overflow-y computado pra auto também, na mesma caixa). O script
+       em row-actions-position.js reposiciona pra position:fixed a cada
+       abertura, calculado a partir do botão — só assim o menu realmente
+       flutua por cima de tudo, inclusive fora dos limites da tabela. */
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.5rem);
+    margin: 0;
+    padding: 0.5rem;
+    min-width: 250px;
+    max-height: min(360px, 70vh);
+    overflow-y: auto;
+    list-style: none;
+    background: var(--pico-background-color);
+    border: 1px solid rgba(201, 162, 75, 0.35);
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12), 0 20px 45px rgba(0, 0, 0, 0.28);
+    z-index: 500;
+}
+
+/* Item de menu de verdade, não botão avulso dentro de caixa — cada <li>
+   ocupa a largura toda, sem borda própria, com destaque só no hover, pra
+   não competir visualmente com a moldura do menu em volta. */
+.row-actions > ul li {
+    margin: 0;
+}
+
+.row-actions > ul li + li {
+    margin-top: 0.15rem;
+}
+
+.row-actions > ul button,
+.row-actions > ul a[role="button"] {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0.55rem 0.75rem;
+    background: none !important;
+    border: none !important;
+    border-radius: 8px;
+    color: var(--pico-color);
+    text-align: left;
+    font-weight: 500;
+}
+
+.row-actions > ul button:hover,
+.row-actions > ul a[role="button"]:hover {
+    background: rgba(201, 162, 75, 0.12) !important;
+}
+
+.row-actions > ul button.contrast:hover {
+    background: rgba(220, 38, 38, 0.12) !important;
+    color: #dc2626;
+}
+
+.row-actions > ul input[type="password"] {
+    margin: 0 0 0.4rem 0;
+}
+
+.row-actions[open] > summary {
+    color: var(--heimdall-gold);
+}
+
+/* Em tela estreita, dentro de .table-wrap (overflow-x: auto, sem
+   overflow-y), um popover absoluto de 230px pode cortar ou abrir fora da
+   célula — vira estático (empurra a linha pra baixo) só nesse caso. */
+@media (max-width: 860px) {
+    .row-actions > ul {
+        position: static;
+        box-shadow: none;
+        margin-top: 0.4rem;
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* Categorias do nav (Chamadas, Tenant) — mesmo padrão visual do menu de
+   configurações, mas abrindo à esquerda (sob o texto) e com rótulo normal
+   em vez de ícone, pra agrupar links relacionados sem poluir o header. */
+.nav-dropdown {
+    position: relative;
+}
+
+/* Pico estiliza details.dropdown > summary como um <select> (borda +
+   fundo próprios, especificidade maior que a nossa pílula acima) — sem
+   !important aqui o balão do Pico continua aparecendo por cima. */
+.nav-dropdown > summary {
+    list-style: none;
+    cursor: pointer;
+    background: none !important;
+    border: none !important;
+    border-radius: 999px !important;
+    color: var(--heimdall-gold) !important;
+}
+
+.nav-dropdown > summary:hover {
+    background: rgba(201, 162, 75, 0.1) !important;
+    color: var(--heimdall-gold-hover) !important;
+}
+
+.nav-dropdown.active > summary {
+    background: rgba(201, 162, 75, 0.14) !important;
+    color: var(--heimdall-gold) !important;
+}
+
+.nav-dropdown > summary::-webkit-details-marker,
+.nav-dropdown > summary::marker {
+    display: none;
+}
+
+.nav-dropdown > summary::after {
+    content: "▾";
+    display: inline-block;
+    margin-left: 0.35rem;
+    font-size: 0.65em;
+    vertical-align: middle;
+}
+
+.nav-dropdown > ul {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 0.5rem);
+    margin: 0;
+    padding: 0;
+    min-width: 200px;
+    list-style: none;
+    z-index: 30;
+}
+
+.nav-dropdown > ul li {
+    margin: 0.4rem 0;
+}
+
+@media (max-width: 860px) {
+    .nav-dropdown > ul {
+        position: static;
+        box-shadow: none;
+        margin-top: 0.4rem;
+        width: 100%;
+    }
+}
+
+/* --- Componentes do dashboard --- */
+.badge {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-pending { background: #fef3c7; color: #92400e; }
+.badge-waiting { background: #dbeafe; color: #1e40af; }
+.badge-escalated { background: #fee2e2; color: #991b1b; }
+.badge-resolved { background: #dcfce7; color: #166534; }
+.badge-failed { background: #f3f4f6; color: #374151; }
+.badge-progress { background: #ede9fe; color: #5b21b6; }
+.badge-success { background: #dcfce7; color: #166534; }
+
+/* Contador de escalações no nav — menor que os badges de estado
+   (não é uma etiqueta de status, é só um número), pra não competir
+   visualmente com o texto "Escalações" ao lado. */
+#escalations-count-badge .badge {
+    padding: 0 0.4rem;
+    min-width: 1.1rem;
+    height: 1.1rem;
+    line-height: 1.1rem;
+    font-size: 0.65rem;
+    text-align: center;
+}
+.badge-muted { background: #f3f4f6; color: #6b7280; }
+.badge-primary { background: rgba(201, 162, 75, 0.18); color: #7a5f1f; }
+[data-theme="dark"] .badge-primary { color: var(--heimdall-gold); }
+
+/* Popup de nova chamada — canto inferior direito, empilha se houver mais
+   de um (position:fixed + margin-top no seguinte, via nth-of-type não é
+   viável com criação dinâmica; várias toasts sobrepostas por pouco tempo
+   é aceitável, cada uma some sozinha em 15s). */
+.heimdall-toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--pico-card-background-color, #1e293b);
+    color: var(--pico-color);
+    border: 1px solid var(--pico-card-border-color, #334155);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    max-width: 340px;
+    animation: heimdall-toast-in 0.25s ease-out;
+}
+.heimdall-toast a { white-space: nowrap; margin: 0; padding: 0.25rem 0.75rem; }
+.heimdall-toast-close {
+    background: none;
+    border: none;
+    color: var(--pico-muted-color);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 0.25rem;
+}
+@keyframes heimdall-toast-in {
+    from { opacity: 0; transform: translateY(0.5rem); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+table td, table th {
+    vertical-align: top;
+}
+
+/* Contém o scroll horizontal de tabelas largas dentro delas mesmas, em vez
+de deixar a página inteira estourar a largura da viewport. */
+.table-wrap {
+    overflow-x: auto;
+}
+
+.muted {
+    color: var(--pico-muted-color);
+    font-size: 0.85rem;
+}
+
+.timeline {
+    border-left: 2px solid var(--pico-muted-border-color);
+    padding-left: 1rem;
+    margin-left: 0.5rem;
+}
+
+.timeline-item {
+    margin-bottom: 1rem;
+}
+
+.msg-inbound { border-left: 3px solid #3b82f6; padding-left: 0.75rem; }
+.msg-outbound { border-left: 3px solid #16a34a; padding-left: 0.75rem; }
+
+/* --- Página inicial (hero + KPIs + gráficos) --- */
+.hero {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.hero h1 {
+    margin-bottom: 0.15rem;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-bubble {
+    background: var(--pico-card-background-color);
+    border: 1px solid var(--pico-muted-border-color);
+    border-left: 4px solid var(--heimdall-gold);
+    border-radius: var(--pico-border-radius);
+    padding: 1.1rem 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stat-bubble:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.stat-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+    flex-shrink: 0;
+    width: 2.6rem;
+    height: 2.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(201, 162, 75, 0.12);
+}
+
+.stat-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.stat-label {
+    font-size: 0.82rem;
+    color: var(--pico-muted-color);
+}
+
+.stat-amber { border-left-color: #d97706; }
+.stat-blue { border-left-color: #2563eb; }
+.stat-red { border-left-color: #dc2626; }
+.stat-green { border-left-color: #16a34a; }
+.stat-gray { border-left-color: #6b7280; }
+.stat-gold { border-left-color: var(--heimdall-gold); }
+
+.chart-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.25rem;
+}
+
+/* Sem isso, itens de grid não encolhem abaixo da largura intrínseca do
+<canvas> do Chart.js, e o grid inteiro estoura a largura da página. */
+.chart-grid article {
+    min-width: 0;
+}
+
+.chart-grid canvas {
+    max-width: 100%;
+}
+
+.chart-grid article {
+    transition: box-shadow 0.15s ease;
+}
+
+.chart-grid article:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 900px) {
+    .chart-grid { grid-template-columns: 1fr; }
+    .hero { flex-direction: column; text-align: center; }
+}
+
+/* Realce de linha nas tabelas ao passar o mouse — ajuda a acompanhar uma
+linha em tabelas largas (fila humana, ocorrências). */
+table tbody tr {
+    transition: background-color 0.1s ease;
+}
+
+table tbody tr:hover {
+    background-color: rgba(201, 162, 75, 0.07);
+}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ tenant.name }} — Heimdall Logtech{% endblock %}
+{% block content %}
+<h2>{{ tenant.name }}</h2>
+<p class="muted">Slug: {{ tenant.slug }}</p>
+
+<article>
+    <header><strong>Status</strong></header>
+    {% if tenant.is_active %}
+    <span class="badge badge-success">Ativo</span>
+    {% else %}
+    <span class="badge badge-muted">Inativo</span>
+    {% endif %}
+</article>
+
+<article>
+    <header><strong>Conexão WhatsApp</strong></header>
+    <div id="my-tenant-connection" hx-get="/web/my-tenant/connection" hx-trigger="load" hx-swap="innerHTML">
+        <p class="muted">Carregando status...</p>
+    </div>
+</article>
+{% endblock %}

@@ -1,0 +1,2 @@
+TXT_NAME=_acme-challenge.driverapp.heimdall-logtech.com
+TXT_VALUE=9oTqr2TMF2EIGgjQPdK93BFNmcoSyWkQdM6xT4JxBzU

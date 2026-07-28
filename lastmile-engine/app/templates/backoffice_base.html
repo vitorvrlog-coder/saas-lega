@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Backoffice — Heimdall Logtech{% endblock %}</title>
+    <link rel="icon" type="image/png" href="/static/img/heimdall-icon.png?v={{ static_version('img/heimdall-icon.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="/static/style.css?v={{ static_version('style.css') }}">
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script>
+        (function () {
+            var saved = localStorage.getItem("heimdall-theme");
+            var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+</head>
+<body class="with-chrome">
+    {% set path = request.url.path %}
+    <header class="site-header">
+        <nav class="container">
+            <ul>
+                <li>
+                    <a href="/backoffice/" class="brand" style="text-decoration:none;">
+                        <span class="heimdall-emblem heimdall-emblem--sm">
+                            <img src="/static/img/heimdall-icon.png?v={{ static_version('img/heimdall-icon.png') }}" alt="Heimdall Logtech">
+                        </span>
+                        <span class="brand-name">HEIMDALL<small>LOGTECH</small></span>
+                        <span class="badge badge-progress" style="margin-left:0.5rem;">Backoffice</span>
+                    </a>
+                </li>
+            </ul>
+            <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Abrir menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="/backoffice/" class="{{ 'active' if path == '/backoffice/' else '' }}">Visão geral</a></li>
+                <li><a href="/backoffice/tenants" class="{{ 'active' if path.startswith('/backoffice/tenants') else '' }}">Transportadoras</a></li>
+                <li><a href="/backoffice/health" class="{{ 'active' if path.startswith('/backoffice/health') else '' }}">Saúde</a></li>
+                <li>
+                    <button type="button" class="theme-toggle" id="theme-toggle" title="Alternar tema" aria-label="Alternar tema claro/escuro">🌓</button>
+                </li>
+                {% if request.state.user is defined %}
+                <li>
+                    <details class="dropdown settings-menu">
+                        <summary role="button" class="theme-toggle" title="Configurações da conta" aria-label="Configurações da conta">⚙️</summary>
+                        <ul>
+                            <li><span class="muted">{{ request.state.user.email }}</span></li>
+                            <li><a href="/web/my-profile">Meu perfil</a></li>
+                            <li><a href="/web/change-password">Alterar senha</a></li>
+                            <li>
+                                <form method="post" action="/web/logout">
+                                    <button type="submit" class="secondary outline">Sair</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </details>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+    <script>
+        document.getElementById("theme-toggle").addEventListener("click", function () {
+            var current = document.documentElement.getAttribute("data-theme");
+            var next = current === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", next);
+            localStorage.setItem("heimdall-theme", next);
+        });
+
+        var navToggle = document.getElementById("nav-toggle");
+        var navLinks = document.getElementById("nav-links");
+        navToggle.addEventListener("click", function () {
+            var isOpen = navLinks.classList.toggle("open");
+            navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        });
+    </script>
+    <main class="container fade-in">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="site-footer">
+        <div class="container site-footer-inner">
+            <span class="site-footer-brand">
+                <img src="/static/img/heimdall-icon.png?v={{ static_version('img/heimdall-icon.png') }}" alt="" class="site-footer-logo">
+                HEIMDALL LOGTECH
+            </span>
+            <span class="muted">© 2026 · Backoffice · Gestão de transportadoras</span>
+        </div>
+    </footer>
+</body>
+</html>

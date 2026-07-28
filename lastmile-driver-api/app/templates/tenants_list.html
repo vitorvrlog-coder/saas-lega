@@ -1,0 +1,45 @@
+{% extends "backoffice_base.html" %}
+{% block title %}Transportadoras — Backoffice Heimdall{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+    <h2>Transportadoras</h2>
+    <a href="/backoffice/tenants/new" role="button">Nova transportadora</a>
+</div>
+
+{% if tenants %}
+<div class="table-wrap">
+<table>
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Slug</th>
+            <th>Phone Number ID</th>
+            <th>Raio (km)</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for tenant in tenants %}
+        <tr>
+            <td>{{ tenant.name }}</td>
+            <td class="muted">{{ tenant.slug }}</td>
+            <td class="muted">{{ tenant.whatsapp_phone_number_id }}</td>
+            <td>{{ tenant.allowed_radius_km }}</td>
+            <td>
+                {% if tenant.is_active %}
+                <span class="badge badge-success">Ativo</span>
+                {% else %}
+                <span class="badge badge-muted">Inativo</span>
+                {% endif %}
+            </td>
+            <td><a href="/backoffice/tenants/{{ tenant.id }}">Gerenciar</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<p>Nenhum tenant cadastrado ainda.</p>
+{% endif %}
+{% endblock %}

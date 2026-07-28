@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Heimdall Logtech{% endblock %}</title>
+    <link rel="icon" type="image/png" href="/static/img/heimdall-icon.png?v={{ static_version('img/heimdall-icon.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="/static/style.css?v={{ static_version('style.css') }}">
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script>
+        // Aplica o tema salvo antes do primeiro paint, pra não piscar o
+        // tema errado por uma fração de segundo ao carregar a página.
+        (function () {
+            var saved = localStorage.getItem("heimdall-theme");
+            var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+</head>
+<body class="{{ 'with-chrome' if show_nav | default(true) else '' }}">
+    {% if show_nav | default(true) %}
+    {% set path = request.url.path %}
+    {% set chamadas_active = path.startswith('/web/human-queue') or path.startswith('/web/occurrences') %}
+    {% set tenant_active = path.startswith('/web/my-tenant') %}
+    <header class="site-header">
+        <nav class="container">
+            <ul>
+                <li>
+                    <a href="/web/" class="brand" style="text-decoration:none;">
+                        <span class="heimdall-emblem heimdall-emblem--sm">
+                            <img src="/static/img/heimdall-icon.png?v={{ static_version('img/heimdall-icon.png') }}" alt="Heimdall Logtech">
+                        </span>
+                        <span class="brand-name">HEIMDALL<small>LOGTECH</small></span>
+                    </a>
+                </li>
+            </ul>
+            <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Abrir menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="/web/" class="{{ 'active' if path == '/web/' else '' }}">Visão geral</a></li>
+                <li>
+                    <details class="dropdown nav-dropdown{{ ' active' if chamadas_active else '' }}">
+                        <summary>Chamadas</summary>
+                        <ul>
+                            <li><a href="/web/human-queue">Fila de chamadas</a></li>
+                            <li><a href="/web/occurrences">Histórico de chamadas</a></li>
+                        </ul>
+                    </details>
+                </li>
+                <li><a href="/web/drivers" class="{{ 'active' if path.startswith('/web/drivers') else '' }}">Motoristas</a></li>
+                <li><a href="/web/manifests" class="{{ 'active' if path.startswith('/web/manifests') else '' }}">Planilhas de rota</a></li>
+                <li>
+                    <a href="/web/escalations" class="{{ 'active' if path.startswith('/web/escalations') else '' }}">Escalações</a>
+                    {% if request.state.user is defined %}
+                    <span id="escalations-count-badge" hx-get="/web/escalations/count-badge"
+                          hx-trigger="load, every 15s" hx-swap="outerHTML" data-count="0"></span>
+                    {% endif %}
+                </li>
+                {% if request.state.user is defined and request.state.user.tenant_id and not request.state.user.is_platform_admin %}
+                    {% if request.state.user.is_tenant_admin %}
+                    <li>
+                        <details class="dropdown nav-dropdown{{ ' active' if tenant_active else '' }}">
+                            <summary>Tenant</summary>
+                            <ul>
+                                <li><a href="/web/my-tenant">Meu tenant</a></li>
+                                <li><a href="/web/my-tenant/templates">Templates</a></li>
+                                <li><a href="/web/my-tenant/operators">Meus Operadores</a></li>
+                            </ul>
+                        </details>
+                    </li>
+                    {% else %}
+                    <li><a href="/web/my-tenant" class="{{ 'active' if tenant_active else '' }}">Tenant</a></li>
+                    {% endif %}
+                {% endif %}
+                <li>
+                    <button type="button" class="theme-toggle" id="theme-toggle" title="Alternar tema" aria-label="Alternar tema claro/escuro">🌓</button>
+                </li>
+                {% if request.state.user is defined %}
+                <li>
+                    <details class="dropdown settings-menu">
+                        <summary role="button" class="theme-toggle" title="Configurações da conta" aria-label="Configurações da conta">⚙️</summary>
+                        <ul>
+                            <li><span class="muted">{{ request.state.user.email }}</span></li>
+                            <li><a href="/web/my-profile">Meu perfil</a></li>
+                            <li><a href="/web/change-password">Alterar senha</a></li>
+                            <li>
+                                <form method="post" action="/web/logout">
+                                    <button type="submit" class="secondary outline">Sair</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </details>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+    <script>
+        document.getElementById("theme-toggle").addEventListener("click", function () {
+            var current = document.documentElement.getAttribute("data-theme");
+            var next = current === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", next);
+            localStorage.setItem("heimdall-theme", next);
+        });
+
+        var navToggle = document.getElementById("nav-toggle");
+        var navLinks = document.getElementById("nav-links");
+        navToggle.addEventListener("click", function () {
+            var isOpen = navLinks.classList.toggle("open");
+            navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        });
+
+        // Alerta em tempo real de escalações abertas: o badge no nav faz
+        // polling sozinho (HTMX); aqui só refletimos a contagem no título
+        // da aba, pra dar pra perceber mesmo com o dashboard em segundo
+        // plano (sem precisar estar na tela de Escalações). Reage a
+        // qualquer swap (não só o do badge) e relê o DOM — idempotente e
+        // evita depender de qual elemento exato disparou o evento.
+        var baseTitle = document.title;
+        document.body.addEventListener("htmx:afterSwap", function () {
+            var badge = document.getElementById("escalations-count-badge");
+            if (!badge) return;
+            var count = parseInt(badge.getAttribute("data-count") || "0", 10);
+            document.title = count > 0 ? "(" + count + ") " + baseTitle : baseTitle;
+        });
+
+        // Popup de nova chamada: compara o ID mais recente da fila humana
+        // contra o último visto (localStorage, sobrevive entre páginas) —
+        // só avisa quando MUDA, não a cada poll. Primeira carga da aba não
+        // dispara popup (senão toda chamada já existente "avisaria" de
+        // novo ao simplesmente abrir o dashboard).
+        (function () {
+            var STORAGE_KEY = "heimdall-last-queue-id";
+            var seenThisTab = false;
+
+            function showToast(text, href) {
+                var toast = document.createElement("div");
+                toast.className = "heimdall-toast";
+                toast.innerHTML = '<span>🔔 ' + text + '</span>';
+                var link = document.createElement("a");
+                link.href = href;
+                link.textContent = "Ver";
+                link.setAttribute("role", "button");
+                link.className = "secondary";
+                toast.appendChild(link);
+                var close = document.createElement("button");
+                close.textContent = "×";
+                close.className = "heimdall-toast-close";
+                close.setAttribute("aria-label", "Fechar aviso");
+                close.addEventListener("click", function () { toast.remove(); });
+                toast.appendChild(close);
+                document.body.appendChild(toast);
+                setTimeout(function () { toast.remove(); }, 15000);
+            }
+
+            function poll() {
+                fetch("/web/human-queue/latest-notification")
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (data) {
+                        if (!data || !data.id) return;
+                        var lastSeen = localStorage.getItem(STORAGE_KEY);
+                        if (data.id !== lastSeen) {
+                            if (seenThisTab) {
+                                showToast(
+                                    "Nova chamada: motorista " + data.driver_phone,
+                                    "/web/human-queue"
+                                );
+                            }
+                            localStorage.setItem(STORAGE_KEY, data.id);
+                            seenThisTab = true;
+                        }
+                    })
+                    .catch(function () {});
+            }
+
+            poll();
+            setInterval(poll, 12000);
+        })();
+    </script>
+    {% endif %}
+    <main class="container fade-in">
+        {% block content %}{% endblock %}
+    </main>
+    {% if show_nav | default(true) %}
+    <footer class="site-footer">
+        <div class="container site-footer-inner">
+            <span class="site-footer-brand">
+                <img src="/static/img/heimdall-icon.png?v={{ static_version('img/heimdall-icon.png') }}" alt="" class="site-footer-logo">
+                HEIMDALL LOGTECH
+            </span>
+            <span class="muted">© 2026 · Painel operacional · Last mile B2C</span>
+        </div>
+    </footer>
+    {% endif %}
+</body>
+</html>

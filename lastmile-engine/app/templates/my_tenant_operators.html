@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Meus Operadores — Heimdall Logtech{% endblock %}
+{% block content %}
+<h2>Meus Operadores</h2>
+<p class="muted">Operadores de {{ tenant.name }} que logam no dashboard e enxergam só as ocorrências deste tenant.</p>
+
+{% if user_error %}<p style="color: var(--pico-del-color)">{{ user_error }}</p>{% endif %}
+
+{% if operators %}
+<div class="table-wrap">
+<table>
+    <thead>
+        <tr>
+            <th>E-mail</th>
+            <th>Papel</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for operator in operators %}
+        <tr>
+            <td>{{ operator.email }}{% if operator.id == current_user_id %} <span class="muted">(você)</span>{% endif %}</td>
+            <td>
+                {% if operator.is_primary_admin %}
+                <span class="badge badge-primary">Admin principal</span>
+                {% elif operator.is_tenant_admin %}
+                <span class="badge badge-progress">Admin do tenant</span>
+                {% else %}
+                <span class="muted">Operador</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if operator.is_active %}
+                <span class="badge badge-success">Ativo</span>
+                {% else %}
+                <span class="badge badge-muted">Inativo</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if operator.id == current_user_id %}
+                <a href="/web/change-password" class="muted">Trocar minha senha</a>
+                {% else %}
+                    {% set can_manage_status = not operator.is_tenant_admin or current_user_is_primary_admin %}
+                    {% set can_manage_admin = current_user_is_primary_admin and not operator.is_primary_admin %}
+                    {% if can_manage_status or can_manage_admin %}
+                    <details class="dropdown row-actions">
+                        <summary role="button" class="secondary outline">Ações ▾</summary>
+                        <ul>
+                            {% if can_manage_status %}
+                            <li>
+                                <form method="post" action="/web/my-tenant/operators/{{ operator.id }}/toggle-active" style="margin:0;">
+                                    <button type="submit" class="secondary outline">
+                                        {{ 'Desativar' if operator.is_active else 'Ativar' }}
+                                    </button>
+                                </form>
+                            </li>
+                            <li>
+                                <form method="post" action="/web/my-tenant/operators/{{ operator.id }}/reset-password" style="margin:0; display:flex; flex-wrap:wrap; gap:0.25rem;">
+                                    <input type="password" name="new_password" placeholder="Nova senha" minlength="8" required style="margin:0; flex:1 1 140px;">
+                                    <button type="submit" class="secondary outline">Redefinir</button>
+                                </form>
+                            </li>
+                            {% endif %}
+                            {% if can_manage_admin %}
+                            <li>
+                                <form method="post" action="/web/my-tenant/operators/{{ operator.id }}/toggle-tenant-admin" style="margin:0;">
+                                    <button type="submit" class="secondary outline">
+                                        {{ 'Remover admin' if operator.is_tenant_admin else 'Tornar admin do tenant' }}
+                                    </button>
+                                </form>
+                            </li>
+                            <li>
+                                <form method="post" action="/web/my-tenant/operators/{{ operator.id }}/delete" style="margin:0;" onsubmit="return confirm('Remover este operador definitivamente?');">
+                                    <button type="submit" class="contrast outline">Remover</button>
+                                </form>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </details>
+                    {% else %}
+                    <span class="muted">—</span>
+                    {% endif %}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">Nenhum operador cadastrado ainda.</p>
+{% endif %}
+
+<article>
+    <header><strong>Adicionar operador</strong></header>
+    <form method="post" action="/web/my-tenant/operators">
+        <div class="grid">
+            <div>
+                <label for="operator_email">E-mail do novo operador</label>
+                <input type="email" id="operator_email" name="email" required autocapitalize="none" autocorrect="off" spellcheck="false">
+            </div>
+            <div>
+                <label for="operator_password">Senha</label>
+                <input type="password" id="operator_password" name="password" minlength="8" required>
+            </div>
+        </div>
+        <button type="submit" class="secondary">Adicionar operador</button>
+    </form>
+</article>
+{% endblock %}

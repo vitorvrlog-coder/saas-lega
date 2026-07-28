@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Templates de mensagem — Heimdall Logtech{% endblock %}
+{% block content %}
+<h2>Templates de mensagem</h2>
+<p class="muted">Deixe em branco para não enviar essa mensagem. Use as variáveis indicadas entre chaves, ex.: {new_address}.</p>
+<p class="muted">Pra deixar menos robótico: escreva duas ou mais versões da mesma mensagem separadas por uma linha com <code>===</code> — o sistema escolhe uma aleatoriamente a cada envio, em vez de repetir sempre o mesmo texto.</p>
+
+<form method="post" action="/web/my-tenant/templates">
+    {% for field in template_fields %}
+    <label for="template_{{ field.key }}">
+        {{ field.label }}
+        {% if field.variables %}
+        <span class="muted">— variáveis: {% for v in field.variables %}{{ '{' }}{{ v }}{{ '}' }}{% if not loop.last %}, {% endif %}{% endfor %}</span>
+        {% endif %}
+    </label>
+    <textarea id="template_{{ field.key }}" name="template_{{ field.key }}" rows="4"
+              placeholder="Opcional: escreva outra versão numa linha, separada por ===">{{ tenant.message_templates.get(field.key, '') }}</textarea>
+    {% endfor %}
+
+    <button type="submit">Salvar templates</button>
+</form>
+{% endblock %}

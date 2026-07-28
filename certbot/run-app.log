@@ -1,0 +1,19 @@
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for app.heimdall-logtech.com
+Hook '--manual-auth-hook' for app.heimdall-logtech.com ran with error output:
+ Waiting for DNS propagation of _acme-challenge.app.heimdall-logtech.com = P1xgOyWFzjwS07xjfBF7gVPs3cLOE7ToUmrVm7ceBCY
+ DNS propagated, continuing.
+
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/app.heimdall-logtech.com/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/app.heimdall-logtech.com/privkey.pem
+This certificate expires on 2026-10-09.
+These files will be updated when the certificate renews.
+NEXT STEPS:
+- The certificate will need to be renewed before it expires. Certbot can automatically renew the certificate in the background, but you may need to take steps to enable that functionality. See https://certbot.org/renewal-setup for instructions.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
