@@ -186,27 +186,6 @@ TEMPLATE_FIELDS = [
 ]
 
 
-_VARIABLES_BY_KEY = {field["key"]: field["variables"] for field in TEMPLATE_FIELDS}
-
-
-def build_template_components(key: str, **kwargs) -> list[dict] | None:
-    """Monta o `components` no formato da Graph API pra preencher as
-    variáveis posicionais {{1}}, {{2}}... de um template aprovado —
-    reaproveita a MESMA ordem de variáveis já documentada em
-    TEMPLATE_FIELDS pra cada chave, pra não manter uma segunda lista
-    desalinhada. Quem cadastra o template no Meta Business Manager
-    precisa seguir essa mesma ordem ao escrever o corpo aprovado."""
-    variables = _VARIABLES_BY_KEY.get(key, [])
-    if not variables:
-        return None
-    return [
-        {
-            "type": "body",
-            "parameters": [{"type": "text", "text": str(kwargs.get(var, ""))} for var in variables],
-        }
-    ]
-
-
 def render_template(tenant, key: str, **kwargs) -> str | None:
     template = tenant.message_templates.get(key)
     if not template:

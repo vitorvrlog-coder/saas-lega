@@ -22,7 +22,7 @@ from app.db.models.enums import (
 )
 from app.db.models.invoice_entry import InvoiceEntry
 from app.db.models.tenant import Tenant
-from app.integrations.whatsapp_cloud.phone import normalize_br_phone
+from app.integrations.evolution_api.phone import normalize_br_phone
 from app.services.invoice_extraction_service import (
     InvoiceExtractionError,
     extract_from_photo,
@@ -179,7 +179,7 @@ async def confirm_and_send_preventive_contact(
 
     # Import local pra evitar ciclo: occurrence_service importa
     # find_confirmed_invoice_by_order_number deste módulo.
-    from app.services.occurrence_service import log_message, send_templated_or_free, whatsapp_client_for
+    from app.services.occurrence_service import evolution_client_for, log_message, send_text_message
 
     text = render_template(
         tenant, PREVENTIVE_ORDER_CONFIRMATION,
@@ -191,42 +191,24 @@ async def confirm_and_send_preventive_contact(
     if text is None:
         raise InvoicePreventiveContactError("Tenant sem template 'preventive_order_confirmation' configurado.")
 
-    from app.integrations.whatsapp_cloud.client import WhatsAppAPIError
+    from app.integrations.evolution_api.client import EvolutionAPIError, extract_message_id
 
-    client = whatsapp_client_for(tenant, settings)
+    client = evolution_client_for(tenant, settings)
     try:
-        result = await send_templated_or_free(
+        result = await send_text_message(
             db, client, tenant, PREVENTIVE_ORDER_CONFIRMATION, entry.customer_phone, text,
-            customer_name=entry.customer_name or "", order_number=entry.order_number or "",
-            address=entry.customer_address, map_link=build_map_link(entry.customer_address),
         )
-    except WhatsAppAPIError as exc:
+    except EvolutionAPIError as exc:
         # Erro real de envio (token expirado, rede) não pode virar 500 cru
         # pro app — vira erro de domínio como qualquer outro motivo de
         # falha aqui (bug real encontrado 2026-07-12 testando o app: um
         # token expirado derrubava a rota de confirmação inteira).
         raise InvoicePreventiveContactError(f"Falha ao enviar mensagem: {exc}") from exc
-    # send_templated_or_free retorna None quando não há janela de 24h aberta
-    # com o cliente NEM template aprovado na Meta pra essa chave (nunca
-    # inventa envio) — sem essa checagem, o status virava CONTACT_SENT
-    # mesmo com a mensagem nunca tendo saído (bug encontrado testando o
-    # app Android contra um tenant sem whatsapp_template_names configurado).
-    if result is None:
-        raise InvoicePreventiveContactError(
-            "Não foi possível enviar: sem sessão de 24h aberta com o cliente "
-            "nem template aprovado na Meta para 'preventive_order_confirmation'."
-        )
-
-    external_message_id = None
-    if isinstance(result, dict):
-        messages = result.get("messages") or []
-        if messages:
-            external_message_id = messages[0].get("id")
 
     log_message(
         db, tenant.id, None, MessageDirection.OUTBOUND, MessageParticipant.CUSTOMER,
         entry.customer_phone, MessageContentType.TEXT, text,
-        external_message_id=external_message_id, raw_payload=result if isinstance(result, dict) else {},
+        external_message_id=extract_message_id(result), raw_payload=result if isinstance(result, dict) else {},
     )
 
     entry.status = InvoiceEntryStatus.CONTACT_SENT

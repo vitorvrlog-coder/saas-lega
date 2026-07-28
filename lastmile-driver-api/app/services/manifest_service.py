@@ -18,7 +18,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.route_manifest import RouteManifest, RouteManifestEntry
-from app.integrations.whatsapp_cloud.phone import normalize_br_phone
+from app.integrations.evolution_api.phone import normalize_br_phone
 
 REQUIRED_COLUMNS = {"stop_number", "driver_phone", "customer_name", "customer_phone", "address"}
 OPTIONAL_COLUMNS = {"route_id"}

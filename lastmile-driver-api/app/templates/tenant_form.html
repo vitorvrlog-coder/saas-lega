@@ -3,10 +3,8 @@
 {% block content %}
 <h2>Novo tenant</h2>
 <p class="muted">
-    O número WhatsApp precisa já estar configurado no Meta Business Manager
-    (WABA verificada, templates aprovados) — informe abaixo o
-    phone_number_id e o access_token gerados lá. Não há provisionamento
-    automático.
+    Ao salvar, uma instância de WhatsApp é criada automaticamente no gateway —
+    na tela seguinte você vai poder escanear o QR code pra conectar o número.
 </p>
 
 {% if error %}<p style="color: var(--pico-del-color)">{{ error }}</p>{% endif %}
@@ -18,14 +16,6 @@
     <label for="slug">Slug (identificador único, minúsculo, sem espaços)</label>
     <input type="text" id="slug" name="slug" value="{{ values.get('slug', '') }}"
            pattern="[a-z0-9\-]+" placeholder="Ex: transportadora-xyz" required>
-
-    <label for="whatsapp_phone_number_id">Phone Number ID (Meta)</label>
-    <input type="text" id="whatsapp_phone_number_id" name="whatsapp_phone_number_id"
-           value="{{ values.get('whatsapp_phone_number_id', '') }}" required>
-
-    <label for="whatsapp_access_token">Access Token (Meta)</label>
-    <input type="password" id="whatsapp_access_token" name="whatsapp_access_token"
-           value="{{ values.get('whatsapp_access_token', '') }}" required>
 
     <label for="allowed_radius_km">Raio permitido para reendereçamento (km)</label>
     <input type="number" id="allowed_radius_km" name="allowed_radius_km" step="0.1" min="0"
@@ -51,7 +41,7 @@
         repergunta ao motorista/cliente até resolver sozinha, mesmo que demore.
     </label>
 
-    <button type="submit">Criar tenant</button>
+    <button type="submit">Criar tenant e provisionar WhatsApp</button>
     <a href="/backoffice/tenants" role="button" class="secondary outline">Cancelar</a>
 </form>
 {% endblock %}

@@ -28,7 +28,7 @@ from app.db.models.state_transition import StateTransition
 from app.db.models.tenant import Tenant
 from app.db.models.user import User
 from app.db.session import get_db
-from app.integrations.whatsapp_cloud.client import WhatsAppAPIError
+from app.integrations.evolution_api.client import EvolutionAPIError
 from app.schemas.ai_outputs import ReplyCategory
 from app.schemas.occurrence import HumanQueueFillRequest
 from app.services import tenant_service, user_service
@@ -242,8 +242,8 @@ async def human_queue_submit(
         return templates.TemplateResponse(
             request, "human_queue_form.html", {"occurrence": occurrence, "error": str(exc)}
         )
-    except WhatsAppAPIError as exc:
-        # Já tentou reenviar (WhatsAppCloudClient) e mesmo assim falhou (ex: erro
+    except EvolutionAPIError as exc:
+        # Já tentou reenviar (EvolutionClient) e mesmo assim falhou (ex: erro
         # 463 do WhatsApp — sessão recém-pareada limitando envio) — sem isso
         # o operador via uma tela de erro crua em vez de um aviso claro pra
         # tentar de novo. Nada foi commitado (rollback automático da sessão),
@@ -567,22 +567,47 @@ async def my_tenant_connection_partial(
     settings: Settings = Depends(get_settings),
     user: User = Depends(require_tenant_member),
 ) -> HTMLResponse:
-    """Status da conta WhatsApp Business (Meta Cloud API) — nome
-    verificado e quality_rating, informativo. Diferente do antigo gateway
-    evolution-go, não há pareamento/QR/reconexão por aqui: número e token
-    são cadastrados manualmente no Meta Business Manager."""
+    """QR de pareamento e status da conexão, disponível pro admin de tenant
+    (não só pro admin da plataforma no backoffice) — evita depender da
+    Heimdall pra reconectar um número que caiu fora do horário comercial.
+    Operador comum (não-admin) só vê o status, sem QR/reconectar, mesma
+    regra de permissão já aplicada em Templates/Operadores."""
     tenant = await db.get(Tenant, user.tenant_id)
-    status: dict = {}
-    error: str | None = None
-    try:
-        status_result = await tenant_service.get_tenant_connection_status(settings, tenant)
-        status = status_result if isinstance(status_result, dict) else {}
-    except WhatsAppAPIError as exc:
-        error = f"Falha ao consultar status na Meta: {exc}"
+    view = await tenant_service.get_tenant_connection_view(settings, tenant)
 
     return templates.TemplateResponse(
         request, "my_tenant_connection_partial.html",
-        {"tenant": tenant, "status": status, "error": error},
+        {"tenant": tenant, "can_manage": user.is_tenant_admin, **view},
+    )
+
+
+@router.post("/my-tenant/connection/reconnect", response_class=HTMLResponse)
+async def my_tenant_reconnect_whatsapp(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    user: User = Depends(require_tenant_admin),
+) -> HTMLResponse:
+    tenant = await db.get(Tenant, user.tenant_id)
+
+    try:
+        await tenant_service.reconnect_tenant_whatsapp(settings, tenant)
+    except TenantProvisioningError as exc:
+        return templates.TemplateResponse(
+            request, "my_tenant_connection_partial.html",
+            {
+                "tenant": tenant, "can_manage": True, "status": {}, "qr_data_url": None,
+                "error": str(exc), "stuck_disconnected": True,
+            },
+            status_code=400,
+        )
+
+    return templates.TemplateResponse(
+        request, "my_tenant_connection_partial.html",
+        {
+            "tenant": tenant, "can_manage": True, "status": {}, "qr_data_url": None,
+            "error": None, "stuck_disconnected": False,
+        },
     )
 
 
@@ -967,8 +992,8 @@ async def escalation_resolve_submit(
     except (InvalidEscalationStateError, ValueError) as exc:
         context["error"] = str(exc)
         return templates.TemplateResponse(request, "escalation_resolve.html", context, status_code=400)
-    except WhatsAppAPIError as exc:
-        # Já tentou reenviar (WhatsAppCloudClient) e mesmo assim falhou (ex: erro
+    except EvolutionAPIError as exc:
+        # Já tentou reenviar (EvolutionClient) e mesmo assim falhou (ex: erro
         # 463 do WhatsApp — sessão recém-pareada limitando envio) — sem isso
         # o operador via uma tela de erro crua em vez de um aviso claro pra
         # tentar de novo. Nada foi commitado (rollback automático da sessão),

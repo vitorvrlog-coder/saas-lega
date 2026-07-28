@@ -1,13 +1,12 @@
 """
-Provisionamento e gestão de tenants. Diferente do antigo gateway
-evolution-go, a WhatsApp Cloud API (Meta) não expõe uma chamada de API pra
-"criar" um número — o número é configurado manualmente no Meta Business
-Manager (verificação, WABA, templates aprovados) e as credenciais
-resultantes (phone_number_id + access_token) são só cadastradas aqui.
-create_tenant portanto apenas persiste o tenant com as credenciais já
-informadas, sem nenhuma chamada de rede.
+Provisionamento e gestão de tenants. Criar um tenant não é só inserir uma
+linha na tabela: envolve criar a instância correspondente no gateway
+evolution-go e conectá-la ao nosso webhook — sem isso o tenant fica sem
+WhatsApp funcional. Por isso create_tenant só persiste no banco depois que
+o provisionamento no gateway deu certo (evita tenant "órfão").
 """
 import logging
+import secrets
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +19,12 @@ from app.db.models.occurrence import Occurrence
 from app.db.models.processed_event import ProcessedEvent
 from app.db.models.route_manifest import RouteManifest
 from app.db.models.tenant import Tenant
-from app.integrations.whatsapp_cloud.client import WhatsAppCloudClient
+from app.integrations.evolution_api.client import (
+    EvolutionAPIError,
+    EvolutionClient,
+    create_evolution_instance,
+    delete_evolution_instance,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -38,11 +42,11 @@ async def _slug_exists(db: AsyncSession, slug: str) -> bool:
     return result.scalar_one_or_none() is not None
 
 
-def build_whatsapp_client(settings: Settings, tenant: Tenant) -> WhatsAppCloudClient:
-    return WhatsAppCloudClient(
-        phone_number_id=tenant.whatsapp_phone_number_id,
-        access_token=tenant.whatsapp_access_token,
-        api_version=settings.META_API_VERSION,
+def build_evolution_client(settings: Settings, tenant: Tenant) -> EvolutionClient:
+    return EvolutionClient(
+        base_url=settings.EVOLUTION_BASE_URL,
+        instance=tenant.evolution_instance,
+        token=tenant.evolution_token,
     )
 
 
@@ -52,8 +56,6 @@ async def create_tenant(
     *,
     name: str,
     slug: str,
-    whatsapp_phone_number_id: str,
-    whatsapp_access_token: str,
     allowed_radius_km: float,
     timeout_attempt_1_minutes: int,
     timeout_attempt_2_minutes: int,
@@ -62,23 +64,51 @@ async def create_tenant(
     if await _slug_exists(db, slug):
         raise DuplicateTenantSlugError(f"Já existe um tenant com slug '{slug}'.")
 
-    if not whatsapp_phone_number_id or not whatsapp_access_token:
+    if not settings.EVOLUTION_GLOBAL_API_KEY:
         raise TenantProvisioningError(
-            "É preciso informar phone_number_id e access_token da WhatsApp Cloud API "
-            "(configurados previamente no Meta Business Manager)."
+            "EVOLUTION_GLOBAL_API_KEY não configurada — não é possível provisionar instância."
         )
+
+    # Slug dobra de nome da instância no gateway (único, legível, já
+    # validado como único acima) — evita mais um identificador pra gerir.
+    evolution_instance = slug
+    evolution_token = secrets.token_hex(16)
+
+    try:
+        await create_evolution_instance(
+            base_url=settings.EVOLUTION_BASE_URL,
+            global_api_key=settings.EVOLUTION_GLOBAL_API_KEY,
+            name=evolution_instance,
+            token=evolution_token,
+        )
+    except Exception as exc:
+        logger.error("Falha ao criar instância evolution-go para tenant '%s': %s", slug, exc)
+        raise TenantProvisioningError(
+            f"Falha ao criar instância no gateway WhatsApp: {exc}"
+        ) from exc
+
+    client = EvolutionClient(
+        base_url=settings.EVOLUTION_BASE_URL, instance=evolution_instance, token=evolution_token
+    )
+    webhook_url = f"{settings.WEBHOOK_BASE_URL}/api/v1/webhooks/evolution"
+    try:
+        await client.connect(webhook_url)
+    except Exception as exc:
+        logger.error("Instância '%s' criada mas connect() falhou: %s", slug, exc)
+        raise TenantProvisioningError(
+            f"Instância criada no gateway, mas falhou ao conectar o webhook: {exc}"
+        ) from exc
 
     tenant = Tenant(
         name=name,
         slug=slug,
-        whatsapp_phone_number_id=whatsapp_phone_number_id,
-        whatsapp_access_token=whatsapp_access_token,
+        evolution_instance=evolution_instance,
+        evolution_token=evolution_token,
         allowed_radius_km=allowed_radius_km,
         timeout_attempt_1_minutes=timeout_attempt_1_minutes,
         timeout_attempt_2_minutes=timeout_attempt_2_minutes,
         full_autonomous_mode=full_autonomous_mode,
         message_templates={},
-        whatsapp_template_names={},
     )
     db.add(tenant)
     await db.flush()
@@ -90,21 +120,14 @@ async def update_tenant(
     tenant: Tenant,
     *,
     name: str | None = None,
-    whatsapp_phone_number_id: str | None = None,
-    whatsapp_access_token: str | None = None,
     allowed_radius_km: float | None = None,
     timeout_attempt_1_minutes: int | None = None,
     timeout_attempt_2_minutes: int | None = None,
     full_autonomous_mode: bool | None = None,
     message_templates: dict | None = None,
-    whatsapp_template_names: dict | None = None,
 ) -> Tenant:
     if name is not None:
         tenant.name = name
-    if whatsapp_phone_number_id is not None:
-        tenant.whatsapp_phone_number_id = whatsapp_phone_number_id
-    if whatsapp_access_token is not None:
-        tenant.whatsapp_access_token = whatsapp_access_token
     if allowed_radius_km is not None:
         tenant.allowed_radius_km = allowed_radius_km
     if timeout_attempt_1_minutes is not None:
@@ -115,8 +138,6 @@ async def update_tenant(
         tenant.full_autonomous_mode = full_autonomous_mode
     if message_templates is not None:
         tenant.message_templates = message_templates
-    if whatsapp_template_names is not None:
-        tenant.whatsapp_template_names = whatsapp_template_names
 
     await db.flush()
     return tenant
@@ -133,15 +154,15 @@ class TenantHasDataError(Exception):
 
 
 async def delete_tenant(db: AsyncSession, settings: Settings, tenant: Tenant) -> None:
-    """Remove definitivamente um tenant. Recusa se já existe QUALQUER
-    ocorrência, planilha de rota ou motorista registrado — occurrences,
-    message_logs, ai_decision_logs, processed_events, route_manifests e
-    drivers referenciam tenant_id com ON DELETE RESTRICT de propósito (ver
-    migrations), então essa checagem antecipa esse erro (senão vira
-    IntegrityError não tratada = 500) com uma mensagem legível pro
-    operador. "Remover" aqui é pra tenant cadastrado por engano/nunca
-    usado — tenant com operação real deve ser Desativado (toggle-active),
-    não removido."""
+    """Remove definitivamente um tenant (linha + instância no gateway).
+    Recusa se já existe QUALQUER ocorrência, planilha de rota ou motorista
+    registrado — occurrences, message_logs, ai_decision_logs,
+    processed_events, route_manifests e drivers referenciam tenant_id com
+    ON DELETE RESTRICT de propósito (ver migrations), então essa checagem
+    antecipa esse erro (senão vira IntegrityError não tratada = 500) com
+    uma mensagem legível pro operador. "Remover" aqui é pra tenant
+    cadastrado por engano/nunca usado — tenant com operação real deve ser
+    Desativado (toggle-active), não removido."""
     has_data = (
         await db.execute(
             select(
@@ -160,15 +181,127 @@ async def delete_tenant(db: AsyncSession, settings: Settings, tenant: Tenant) ->
             "registrados — não pode ser removido. Use 'Desativar' pra impedir novo uso sem perder o histórico."
         )
 
+    if settings.EVOLUTION_GLOBAL_API_KEY:
+        try:
+            await delete_evolution_instance(
+                base_url=settings.EVOLUTION_BASE_URL,
+                global_api_key=settings.EVOLUTION_GLOBAL_API_KEY,
+                name=tenant.evolution_instance,
+            )
+        except Exception as exc:
+            logger.warning(
+                "Falha ao apagar instância '%s' do gateway ao remover tenant (seguindo com a remoção do tenant): %s",
+                tenant.evolution_instance, exc,
+            )
+
     await db.delete(tenant)
     await db.flush()
 
 
+async def reconnect_tenant_whatsapp(settings: Settings, tenant: Tenant) -> None:
+    """Destrava uma instância que "morreu sozinha" no gateway (celular
+    desconectou/desvinculou e as rotas normais de status/reconnect/logout
+    passam a falhar com "client disconnected" indefinidamente — confirmado
+    testando contra o gateway real). Apaga e recria a instância com o MESMO
+    nome e token já salvos no tenant (não muda nada no nosso banco), então
+    reconecta ao webhook — depois disso get_tenant_qr() volta a funcionar."""
+    if not settings.EVOLUTION_GLOBAL_API_KEY:
+        raise TenantProvisioningError(
+            "EVOLUTION_GLOBAL_API_KEY não configurada — não é possível recriar a instância."
+        )
+
+    try:
+        await delete_evolution_instance(
+            base_url=settings.EVOLUTION_BASE_URL,
+            global_api_key=settings.EVOLUTION_GLOBAL_API_KEY,
+            name=tenant.evolution_instance,
+        )
+    except Exception as exc:
+        logger.error("Falha ao apagar instância '%s' pra reconectar: %s", tenant.evolution_instance, exc)
+        raise TenantProvisioningError(f"Falha ao apagar instância travada: {exc}") from exc
+
+    try:
+        await create_evolution_instance(
+            base_url=settings.EVOLUTION_BASE_URL,
+            global_api_key=settings.EVOLUTION_GLOBAL_API_KEY,
+            name=tenant.evolution_instance,
+            token=tenant.evolution_token,
+        )
+    except Exception as exc:
+        logger.error("Falha ao recriar instância '%s': %s", tenant.evolution_instance, exc)
+        raise TenantProvisioningError(f"Instância apagada mas falhou ao recriar: {exc}") from exc
+
+    client = build_evolution_client(settings, tenant)
+    webhook_url = f"{settings.WEBHOOK_BASE_URL}/api/v1/webhooks/evolution"
+    try:
+        await client.connect(webhook_url)
+    except Exception as exc:
+        logger.error("Instância '%s' recriada mas connect() falhou: %s", tenant.evolution_instance, exc)
+        raise TenantProvisioningError(
+            f"Instância recriada, mas falhou ao conectar o webhook: {exc}"
+        ) from exc
+
+
+async def get_tenant_qr(settings: Settings, tenant: Tenant) -> dict | str:
+    """QR expira em ~40s no evolution-go — cada chamada pede um novo,
+    quem decide a cadência de polling é o chamador (rota web)."""
+    client = build_evolution_client(settings, tenant)
+    return await client.get_qr()
+
+
 async def get_tenant_connection_status(settings: Settings, tenant: Tenant) -> dict | str:
-    """GET /{phone_number_id} na Graph API — retorna verified_name e
-    quality_rating do número, informativo pra tela de administração. Não
-    existe mais conceito de "conectado/desconectado" (sessão de app
-    pessoal) nem QR code — o número fica disponível enquanto o
-    access_token for válido."""
-    client = build_whatsapp_client(settings, tenant)
+    client = build_evolution_client(settings, tenant)
     return await client.get_status()
+
+
+async def get_tenant_connection_view(settings: Settings, tenant: Tenant) -> dict:
+    """Junta status + QR pra tela de pareamento, absorvendo uma corrida real
+    confirmada nos logs do gateway: logo após o celular escanear o QR, o
+    WhatsApp força uma reconexão interna (código 515) — nesse intervalo
+    curtíssimo, /instance/status ainda responde LoggedIn=false (autenticação
+    em andamento), então a gente pedia um QR novo, e o gateway rejeitava com
+    400 porque a instância JÁ estava pareada. Isso derrubava uma sessão que
+    tinha acabado de conectar com sucesso pra "stuck_disconnected", expondo
+    o botão destrutivo "Reconectar" (apaga e recria a instância) bem no
+    momento em que reconectar era a última coisa necessária — confirmado
+    como causa real dos pareamentos que "não duravam", contra o log real do
+    evolution-go (delete/create/connect minutos depois de um "Successfully
+    paired"). Por isso, se o pedido de QR falhar, a gente sempre reconsulta
+    o status antes de declarar stuck: se virou LoggedIn nesse meio tempo,
+    trata como conectado."""
+    status: dict = {}
+    qr_data_url: str | None = None
+    error: str | None = None
+    stuck_disconnected = False
+
+    try:
+        status_result = await get_tenant_connection_status(settings, tenant)
+        status = status_result.get("data", {}) if isinstance(status_result, dict) else {}
+    except EvolutionAPIError as exc:
+        error = f"Gateway retornou erro: {exc}"
+        stuck_disconnected = True
+
+    if not status.get("LoggedIn"):
+        try:
+            qr_result = await get_tenant_qr(settings, tenant)
+            qr_payload = qr_result.get("data", {}) if isinstance(qr_result, dict) else {}
+            qr_data_url = qr_payload.get("Qrcode")
+        except EvolutionAPIError as exc:
+            try:
+                recheck_result = await get_tenant_connection_status(settings, tenant)
+                recheck_status = (
+                    recheck_result.get("data", {}) if isinstance(recheck_result, dict) else {}
+                )
+            except EvolutionAPIError:
+                recheck_status = {}
+
+            if recheck_status.get("LoggedIn"):
+                status = recheck_status
+            else:
+                error = f"Gateway retornou erro: {exc}"
+                stuck_disconnected = True
+
+    return {
+        "status": status, "qr_data_url": qr_data_url,
+        "error": error, "stuck_disconnected": stuck_disconnected,
+    }

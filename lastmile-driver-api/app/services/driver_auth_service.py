@@ -17,10 +17,10 @@ from app.core.security import hash_password, verify_password
 from app.db.models.driver import Driver
 from app.db.models.driver_login_code import DriverLoginCode
 from app.db.models.tenant import Tenant
-from app.integrations.whatsapp_cloud.client import WhatsAppAPIError
-from app.integrations.whatsapp_cloud.phone import normalize_br_phone
+from app.integrations.evolution_api.client import EvolutionAPIError
+from app.integrations.evolution_api.phone import normalize_br_phone
 from app.services.message_templates import DRIVER_LOGIN_CODE, render_template
-from app.services.occurrence_service import send_templated_or_free, whatsapp_client_for
+from app.services.occurrence_service import evolution_client_for, send_text_message
 
 logger = logging.getLogger(__name__)
 
@@ -64,10 +64,10 @@ async def send_login_code(db: AsyncSession, settings: Settings, tenant: Tenant, 
     text = render_template(tenant, DRIVER_LOGIN_CODE, code=code)
     if not text:
         return
-    client = whatsapp_client_for(tenant, settings)
+    client = evolution_client_for(tenant, settings)
     try:
-        await send_templated_or_free(db, client, tenant, DRIVER_LOGIN_CODE, driver.phone, text, code=code)
-    except WhatsAppAPIError as exc:
+        await send_text_message(db, client, tenant, DRIVER_LOGIN_CODE, driver.phone, text, code=code)
+    except EvolutionAPIError as exc:
         logger.warning("Falha ao enviar código de login pro motorista %s: %s", driver.id, exc)
 
 

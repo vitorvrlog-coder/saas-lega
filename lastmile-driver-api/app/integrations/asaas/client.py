@@ -5,7 +5,7 @@ app.services.driver_subscription_service). Asaas processa PIX/cartão/
 boleto de verdade porque é instituição de pagamento licenciada; nós só
 consumimos a API dele, nunca tocamos em dado de cartão.
 
-Mesmo padrão de erro/timeout do app.integrations.whatsapp_cloud.client —
+Mesmo padrão de erro/timeout do app.integrations.evolution_api.client —
 qualquer falha de transporte também vira AsaasAPIError, pra não escapar
 sem tratamento nas rotas web/webhook.
 """

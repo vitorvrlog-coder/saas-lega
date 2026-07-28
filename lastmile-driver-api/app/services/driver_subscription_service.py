@@ -23,7 +23,7 @@ from app.db.models.enums import DriverSubscriptionStatus
 from app.db.models.tenant import Tenant
 from app.integrations.asaas.client import AsaasClient
 from app.services.message_templates import SUBSCRIPTION_PAYMENT_LINK, render_template
-from app.services.occurrence_service import send_templated_or_free, whatsapp_client_for
+from app.services.occurrence_service import evolution_client_for, send_text_message
 
 logger = logging.getLogger(__name__)
 
@@ -116,8 +116,8 @@ async def start_subscription(
             value=f"{settings.DRIVER_SUBSCRIPTION_VALUE:.2f}", payment_link=subscription.checkout_url,
         )
         if text:
-            wa_client = whatsapp_client_for(tenant, settings)
-            await send_templated_or_free(
+            wa_client = evolution_client_for(tenant, settings)
+            await send_text_message(
                 db, wa_client, tenant, SUBSCRIPTION_PAYMENT_LINK, driver.phone, text,
                 value=f"{settings.DRIVER_SUBSCRIPTION_VALUE:.2f}", payment_link=subscription.checkout_url,
             )

@@ -153,7 +153,7 @@ def _extract_meli_phone(image_bytes: bytes, settings: Settings) -> str | None:
     -> escolher 'Número principal'/'Número alternativo' na tela de
     detalhe do ML). Retorna só os dígitos, sem DDI — normalização de
     formato fica a cargo de quem grava no banco, mesma disciplina do resto
-    do projeto (ver app.integrations.whatsapp_cloud.phone.normalize_br_phone,
+    do projeto (ver app.integrations.evolution_api.phone.normalize_br_phone,
     aplicado no momento de uso, não na extração)."""
     _lines, full_text = _run_ocr(image_bytes, settings)
     match = _MELI_PHONE_RE.search(full_text)

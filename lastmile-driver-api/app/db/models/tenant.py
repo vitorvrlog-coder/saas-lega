@@ -3,11 +3,8 @@ Tenant = operação/cliente do SaaS (transportadora ou embarcador).
 
 Concentra tudo que o requisito de multi-tenant exige que NÃO seja hardcoded:
 raio permitido, timeouts de tentativa 1/2 e templates de mensagem. Também
-guarda as credenciais da WhatsApp Cloud API (Meta) usadas pra enviar
-mensagem desse tenant — phone_number_id + access_token cadastrados
-manualmente após configuração no Meta Business Manager (não há
-provisionamento automático via API, diferente do antigo gateway
-evolution-go que este modelo substituiu).
+guarda as credenciais da instância evolution-go (gateway WhatsApp não-oficial)
+usadas pra enviar mensagem desse tenant.
 """
 import datetime
 import uuid
@@ -29,10 +26,10 @@ class Tenant(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
 
-    # WhatsApp Cloud API (Meta) — credenciais do número dedicado desse
-    # tenant, cadastradas manualmente (sem provisionamento via API).
-    whatsapp_phone_number_id: Mapped[str] = mapped_column(String(255), nullable=False)
-    whatsapp_access_token: Mapped[str] = mapped_column(String(512), nullable=False)
+    # evolution-go — instância e token dedicados desse tenant no gateway
+    # WhatsApp não-oficial (provisionados via create_evolution_instance).
+    evolution_instance: Mapped[str] = mapped_column(String(255), nullable=False)
+    evolution_token: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # Regras de negócio configuráveis por tenant — nunca hardcoded no motor.
     allowed_radius_km: Mapped[float] = mapped_column(
@@ -43,15 +40,8 @@ class Tenant(Base):
 
     # Templates de mensagem por tenant, chaveados por finalidade, ex.:
     # {"contact_customer_attempt_1": "...", "radius_denied": "...", ...}
-    # — usados como texto livre quando há janela de 24h aberta (resposta a
-    # uma mensagem recebida do destinatário).
+    # — sempre texto livre, evolution-go não exige template pré-aprovado.
     message_templates: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default="{}")
-
-    # Nome do template aprovado na Meta para cada uma das mesmas chaves de
-    # message_templates, usado quando é preciso INICIAR contato (fora da
-    # janela de 24h) — a Cloud API exige template pré-aprovado nesse caso,
-    # texto livre é rejeitado. Ex.: {"contact_customer_attempt_1": "aviso_insucesso_v1"}.
-    whatsapp_template_names: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default="{}")
 
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
 

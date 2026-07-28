@@ -16,22 +16,18 @@ class Settings(BaseSettings):
     # URL assíncrona (usada pela aplicação em runtime, via asyncpg)
     DATABASE_URL: str = "postgresql+asyncpg://lastmile:lastmile@postgres:5432/lastmile_engine"
 
-    # --- WhatsApp Cloud API (Meta) ---
-    # Versão da Graph API usada em todas as chamadas — atualizar quando a
-    # Meta depreciar a versão corrente (ciclo de ~2 anos por versão).
-    META_API_VERSION: str = "v21.0"
-    # App Secret do app Meta — usado pra validar a assinatura HMAC
-    # (X-Hub-Signature-256) de todo webhook recebido, garantindo que o
-    # payload realmente veio da Meta e não foi forjado.
-    META_APP_SECRET: str | None = None
-    # Valor arbitrário definido por nós e cadastrado no painel da Meta —
-    # usado só no handshake de verificação do webhook (GET com
-    # hub.verify_token), não em requisições subsequentes.
-    META_WEBHOOK_VERIFY_TOKEN: str | None = None
-    # Endereço público deste serviço, usado só como referência na UI
-    # (o webhook em si é cadastrado manualmente no painel da Meta, não via
-    # API, diferente do antigo gateway evolution-go).
-    WEBHOOK_BASE_URL: str = "http://lastmile-engine-api:8000"
+    # --- Gateway WhatsApp (evolution-go, reaproveitado do stack heimdall) ---
+    EVOLUTION_BASE_URL: str = "http://heimdall-evolution-go:8080"
+    # Chave mestre do evolution-go — só usada pra criar instância nova
+    # (POST /instance/create) no onboarding de um tenant. Operações do
+    # dia a dia (enviar msg, conectar, QR) usam o token da própria
+    # instância (Tenant.evolution_token), nunca essa chave.
+    EVOLUTION_GLOBAL_API_KEY: str | None = None
+    # Endereço deste próprio serviço, visível de dentro da rede docker —
+    # é pra onde a instância recém-criada no evolution-go manda os
+    # webhooks (não pode ser "localhost", isso apontaria pro próprio
+    # container do evolution-go).
+    WEBHOOK_BASE_URL: str = "http://heimdall-driver-api:8000"
 
     # --- Provedor de IA, trocável sem alterar código de negócio ---
     AI_PROVIDER: str = "ollama"  # "ollama" | "anthropic"
@@ -68,7 +64,7 @@ class Settings(BaseSettings):
     ASAAS_API_KEY: str | None = None
     # Valor arbitrário nosso, conferido contra o header "asaas-access-token"
     # de todo webhook recebido — cadastrado manualmente no painel Asaas
-    # (Configurações > Webhooks), mesmo princípio do META_WEBHOOK_VERIFY_TOKEN.
+    # (Configurações > Webhooks), mesmo princípio da checagem de webhook.
     ASAAS_WEBHOOK_TOKEN: str | None = None
     # Preço mensal da assinatura do motorista — decisão de negócio, não
     # hardcoded no service, pra poder ajustar sem deploy de código.

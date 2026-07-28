@@ -1,9 +1,9 @@
 """
-Painel de saúde dos tenants (backoffice) — status da conta WhatsApp Cloud
-API de cada transportadora + volume de mensagens/IA nas últimas 24h. As N
-chamadas HTTP pra Graph API rodam em paralelo (asyncio.gather com
-return_exceptions=True) pra uma conta com token expirado não travar o
-painel inteiro nem serializar N round-trips de rede.
+Painel de saúde dos tenants (backoffice) — status da conexão WhatsApp de
+cada transportadora + volume de mensagens/IA nas últimas 24h. As N chamadas
+HTTP pro gateway evolution-go rodam em paralelo (asyncio.gather com
+return_exceptions=True) pra uma instância fora do ar não travar o painel
+inteiro nem serializar N round-trips de rede.
 """
 import asyncio
 import datetime
@@ -17,7 +17,7 @@ from app.core.config import Settings
 from app.db.models.ai_decision_log import AIDecisionLog
 from app.db.models.message_log import MessageLog
 from app.db.models.tenant import Tenant
-from app.integrations.whatsapp_cloud.client import WhatsAppAPIError
+from app.integrations.evolution_api.client import EvolutionAPIError
 from app.services.tenant_service import get_tenant_connection_status
 
 HEALTH_WINDOW_HOURS = 24
@@ -43,12 +43,10 @@ class BackofficeHealth:
 async def _check_connection(settings: Settings, tenant: Tenant) -> tuple[bool | None, str | None]:
     try:
         result = await get_tenant_connection_status(settings, tenant)
-    except WhatsAppAPIError as exc:
-        return None, f"Meta retornou erro: {exc}"
-    data = result if isinstance(result, dict) else {}
-    # Não existe "conectado/desconectado" na Cloud API — se a Graph API
-    # respondeu com dados do número, consideramos a conta ativa.
-    return bool(data.get("verified_name")), None
+    except EvolutionAPIError as exc:
+        return None, f"Gateway retornou erro: {exc}"
+    data = result.get("data", {}) if isinstance(result, dict) else {}
+    return bool(data.get("LoggedIn")), None
 
 
 async def get_tenant_health(db: AsyncSession, settings: Settings) -> BackofficeHealth:

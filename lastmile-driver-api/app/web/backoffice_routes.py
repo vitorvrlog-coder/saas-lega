@@ -14,7 +14,6 @@ from app.db.models.driver import Driver
 from app.db.models.tenant import Tenant
 from app.db.models.user import User
 from app.db.session import get_db
-from app.integrations.whatsapp_cloud.client import WhatsAppAPIError
 from app.services import driver_service, driver_subscription_service, tenant_service, user_service
 from app.services.driver_service import DriverHasDataError, DuplicateDriverPhoneError
 from app.services.driver_subscription_service import (
@@ -104,8 +103,6 @@ async def tenant_new_submit(
     request: Request,
     name: str = Form(...),
     slug: str = Form(...),
-    whatsapp_phone_number_id: str = Form(...),
-    whatsapp_access_token: str = Form(...),
     allowed_radius_km: float = Form(...),
     timeout_attempt_1_minutes: int = Form(...),
     timeout_attempt_2_minutes: int = Form(...),
@@ -115,7 +112,6 @@ async def tenant_new_submit(
 ):
     values = {
         "name": name, "slug": slug,
-        "whatsapp_phone_number_id": whatsapp_phone_number_id,
         "allowed_radius_km": allowed_radius_km,
         "timeout_attempt_1_minutes": timeout_attempt_1_minutes,
         "timeout_attempt_2_minutes": timeout_attempt_2_minutes,
@@ -125,8 +121,6 @@ async def tenant_new_submit(
         tenant = await tenant_service.create_tenant(
             db, settings,
             name=name, slug=slug.strip().lower(),
-            whatsapp_phone_number_id=whatsapp_phone_number_id,
-            whatsapp_access_token=whatsapp_access_token,
             allowed_radius_km=allowed_radius_km,
             timeout_attempt_1_minutes=timeout_attempt_1_minutes,
             timeout_attempt_2_minutes=timeout_attempt_2_minutes,
@@ -171,8 +165,6 @@ async def tenant_update_submit(
     request: Request,
     tenant_id: uuid.UUID,
     name: str = Form(...),
-    whatsapp_phone_number_id: str = Form(...),
-    whatsapp_access_token: str | None = Form(None),
     allowed_radius_km: float = Form(...),
     timeout_attempt_1_minutes: int = Form(...),
     timeout_attempt_2_minutes: int = Form(...),
@@ -182,9 +174,8 @@ async def tenant_update_submit(
     """Config de negócio (nome/raio/timeout) — templates de mensagem saíram
     daqui: quem edita agora é o admin do próprio tenant, no dashboard
     operacional (/web/my-tenant/templates), não o admin da plataforma.
-    whatsapp_access_token só é atualizado se o campo vier preenchido —
-    campo de senha some no reload, não faz sentido reenviar vazio e apagar
-    um token válido sem intenção."""
+    instance/token do evolution-go não são editáveis aqui — só via
+    'Reconectar' (recria a instância mantendo o mesmo nome/token)."""
     tenant = await _get_tenant_or_404(db, tenant_id)
     if tenant is None:
         return RedirectResponse(url="/backoffice/tenants", status_code=303)
@@ -192,8 +183,6 @@ async def tenant_update_submit(
     await tenant_service.update_tenant(
         db, tenant,
         name=name,
-        whatsapp_phone_number_id=whatsapp_phone_number_id,
-        whatsapp_access_token=whatsapp_access_token or None,
         allowed_radius_km=allowed_radius_km,
         timeout_attempt_1_minutes=timeout_attempt_1_minutes,
         timeout_attempt_2_minutes=timeout_attempt_2_minutes,
@@ -243,25 +232,53 @@ async def tenant_connection_partial(
     db: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> HTMLResponse:
-    """Parcial HTMX: status da conta WhatsApp Business (Meta Cloud API)
-    desse tenant — nome verificado e quality_rating. Sem pareamento/QR
-    (diferente do antigo gateway evolution-go): número e token são
-    cadastrados manualmente no Meta Business Manager."""
+    """Parcial HTMX, pollado periodicamente pela tela de detalhe do tenant:
+    checa status da instância no gateway e, se ainda não conectada, busca um
+    QR code novo (expira em ~40s, por isso a busca a cada poll em vez de
+    cachear). Lógica de status/QR/corrida pós-pareamento centralizada em
+    tenant_service.get_tenant_connection_view (compartilhada com a tela
+    equivalente do admin de tenant em app.web.routes)."""
     tenant = await _get_tenant_or_404(db, tenant_id)
     if tenant is None:
         return HTMLResponse("Tenant não encontrado.", status_code=404)
 
-    status: dict = {}
-    error: str | None = None
-    try:
-        status_result = await tenant_service.get_tenant_connection_status(settings, tenant)
-        status = status_result if isinstance(status_result, dict) else {}
-    except WhatsAppAPIError as exc:
-        error = f"Falha ao consultar status na Meta: {exc}"
+    view = await tenant_service.get_tenant_connection_view(settings, tenant)
 
     return templates.TemplateResponse(
-        request, "my_tenant_connection_partial.html",
-        {"tenant": tenant, "status": status, "error": error},
+        request, "tenant_qr_partial.html",
+        {"tenant": tenant, **view},
+    )
+
+
+@router.post("/tenants/{tenant_id}/reconnect", response_class=HTMLResponse)
+async def tenant_reconnect_whatsapp(
+    request: Request,
+    tenant_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> HTMLResponse:
+    """Apaga e recria a instância no gateway (mesmo nome/token) — único jeito
+    de destravar um cliente que desconectou sozinho e ficou preso retornando
+    "client disconnected" pra tudo, inclusive pedidos de QR novo."""
+    tenant = await _get_tenant_or_404(db, tenant_id)
+    if tenant is None:
+        return RedirectResponse(url="/backoffice/tenants", status_code=303)
+
+    try:
+        await tenant_service.reconnect_tenant_whatsapp(settings, tenant)
+    except TenantProvisioningError as exc:
+        return templates.TemplateResponse(
+            request, "tenant_qr_partial.html",
+            {
+                "tenant": tenant, "status": {}, "qr_data_url": None,
+                "error": str(exc), "stuck_disconnected": True,
+            },
+            status_code=400,
+        )
+
+    return templates.TemplateResponse(
+        request, "tenant_qr_partial.html",
+        {"tenant": tenant, "status": {}, "qr_data_url": None, "error": None, "stuck_disconnected": False},
     )
 
 

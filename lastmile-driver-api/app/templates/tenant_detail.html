@@ -20,7 +20,7 @@
         </form>
     </div>
 </div>
-<p class="muted">Slug: {{ tenant.slug }} · Phone Number ID: {{ tenant.whatsapp_phone_number_id }}</p>
+<p class="muted">Slug: {{ tenant.slug }} · Instância WhatsApp: {{ tenant.evolution_instance }}</p>
 
 {% if error %}<p style="color: var(--pico-del-color)">{{ error }}</p>{% endif %}
 
@@ -37,13 +37,6 @@
 
         <label for="name">Nome do tenant</label>
         <input type="text" id="name" name="name" value="{{ tenant.name }}" required>
-
-        <label for="whatsapp_phone_number_id">Phone Number ID (Meta)</label>
-        <input type="text" id="whatsapp_phone_number_id" name="whatsapp_phone_number_id"
-               value="{{ tenant.whatsapp_phone_number_id }}" required>
-
-        <label for="whatsapp_access_token">Access Token (Meta) — deixe em branco pra manter o atual</label>
-        <input type="password" id="whatsapp_access_token" name="whatsapp_access_token" placeholder="••••••••">
 
         <label for="allowed_radius_km">Raio permitido para reendereçamento (km)</label>
         <input type="number" id="allowed_radius_km" name="allowed_radius_km" step="0.1" min="0"

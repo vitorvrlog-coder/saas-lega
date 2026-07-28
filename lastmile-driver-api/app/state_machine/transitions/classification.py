@@ -7,7 +7,7 @@ no banco via app.state_machine.engine.transition.
 from dataclasses import dataclass
 
 from app.db.models.enums import FailureReason, OccurrenceState
-from app.integrations.whatsapp_cloud.phone import BR_FULL_LENGTHS, normalize_br_phone
+from app.integrations.evolution_api.phone import BR_FULL_LENGTHS, normalize_br_phone
 from app.schemas.ai_outputs import FailureClassificationOutput
 
 # Abaixo deste nível de confiança, mesmo uma classificação com schema válido

@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.enums import OccurrenceState, TransitionActor
 from app.db.models.occurrence import Occurrence
-from app.integrations.whatsapp_cloud.phone import normalize_br_phone
+from app.integrations.evolution_api.phone import normalize_br_phone
 from app.schemas.occurrence import HumanQueueFillRequest
 from app.state_machine.engine import transition
 

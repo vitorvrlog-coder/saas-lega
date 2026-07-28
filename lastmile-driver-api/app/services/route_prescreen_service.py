@@ -7,7 +7,7 @@ saber "Parada Nº X respondeu: '...'" pelo WhatsApp, não só ver o status
 mudar dentro do app).
 
 Espelha app.services.invoice_service.confirm_and_send_preventive_contact:
-sempre checa o retorno None de send_templated_or_free (nunca marca como
+sempre checa o retorno None de send_text_message (nunca marca como
 enviado sem confirmação real de envio) e usa import local de
 occurrence_service pra evitar ciclo (occurrence_service importa
 find_stop_awaiting_prescreen_reply e classify_prescreen_reply deste
@@ -31,7 +31,7 @@ from app.db.models.enums import (
 )
 from app.db.models.route_capture_session import RouteCaptureSession
 from app.db.models.route_capture_stop import RouteCaptureStop
-from app.integrations.whatsapp_cloud.webhook_parser import ParsedInboundMessage
+from app.integrations.evolution_api.webhook_parser import ParsedInboundMessage
 from app.schemas.ai_outputs import RoutePrescreenCategory, RoutePrescreenReplyOutput
 from app.services.message_templates import (
     ROUTE_CAPTURE_DRIVER_NOTIFY_REPLY,
@@ -93,7 +93,7 @@ async def send_prescreen_for_stop(
 
     # Import local pra evitar ciclo: occurrence_service importa deste
     # módulo (find_stop_awaiting_prescreen_reply/classify_prescreen_reply).
-    from app.services.occurrence_service import log_message, send_templated_or_free, whatsapp_client_for
+    from app.services.occurrence_service import evolution_client_for, log_message, send_text_message
 
     text = render_template(
         tenant, ROUTE_CAPTURE_PRESCREEN_CUSTOMER,
@@ -102,15 +102,15 @@ async def send_prescreen_for_stop(
     if text is None:
         raise RouteCapturePrescreenError("Tenant sem template 'route_capture_prescreen_customer' configurado.")
 
-    from app.integrations.whatsapp_cloud.client import WhatsAppAPIError
+    from app.integrations.evolution_api.client import EvolutionAPIError
 
-    client = whatsapp_client_for(tenant, settings)
+    client = evolution_client_for(tenant, settings)
     try:
-        result = await send_templated_or_free(
+        result = await send_text_message(
             db, client, tenant, ROUTE_CAPTURE_PRESCREEN_CUSTOMER, stop.customer_phone, text,
             customer_name=stop.customer_name or "", address=stop.customer_address,
         )
-    except WhatsAppAPIError as exc:
+    except EvolutionAPIError as exc:
         # Erro real de envio (token expirado, rede) não pode virar 500 cru
         # nem propagar sem controle — vira erro de domínio igual a
         # qualquer outro motivo de falha aqui (mesmo bug encontrado em
@@ -254,12 +254,12 @@ async def _notify_driver_of_reply(
     if text is None:
         return
 
-    from app.integrations.whatsapp_cloud.client import WhatsAppAPIError, extract_message_id
-    from app.services.occurrence_service import log_message, send_templated_or_free, whatsapp_client_for
+    from app.integrations.evolution_api.client import EvolutionAPIError, extract_message_id
+    from app.services.occurrence_service import evolution_client_for, log_message, send_text_message
 
     try:
-        client = whatsapp_client_for(tenant, settings)
-        result = await send_templated_or_free(
+        client = evolution_client_for(tenant, settings)
+        result = await send_text_message(
             db, client, tenant, ROUTE_CAPTURE_DRIVER_NOTIFY_REPLY, driver.phone, text,
             stop_label=stop_label, customer_reply_text=customer_reply_text,
             status_label=_STATUS_LABEL[category],
@@ -272,7 +272,7 @@ async def _notify_driver_of_reply(
             external_message_id=extract_message_id(result),
             raw_payload=result if isinstance(result, dict) else {"raw_text_response": result},
         )
-    except WhatsAppAPIError as exc:
+    except EvolutionAPIError as exc:
         logger.warning("Falha ao notificar motorista da resposta da parada %s: %s", stop.id, exc)
 
 
@@ -300,12 +300,12 @@ async def notify_driver_of_route(
     if text is None:
         return
 
-    from app.integrations.whatsapp_cloud.client import WhatsAppAPIError, extract_message_id
-    from app.services.occurrence_service import log_message, send_templated_or_free, whatsapp_client_for
+    from app.integrations.evolution_api.client import EvolutionAPIError, extract_message_id
+    from app.services.occurrence_service import evolution_client_for, log_message, send_text_message
 
     try:
-        client = whatsapp_client_for(tenant, settings)
-        result = await send_templated_or_free(
+        client = evolution_client_for(tenant, settings)
+        result = await send_text_message(
             db, client, tenant, ROUTE_CAPTURE_DRIVER_NOTIFY_ROUTE, driver.phone, text,
             route_summary_text=route_summary_text,
         )
@@ -317,5 +317,5 @@ async def notify_driver_of_route(
             external_message_id=extract_message_id(result),
             raw_payload=result if isinstance(result, dict) else {"raw_text_response": result},
         )
-    except WhatsAppAPIError as exc:
+    except EvolutionAPIError as exc:
         logger.warning("Falha ao notificar motorista da rota otimizada (sessão %s): %s", session.id, exc)

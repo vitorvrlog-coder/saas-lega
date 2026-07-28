@@ -16,7 +16,7 @@ from app.db.models.invoice_entry import InvoiceEntry
 from app.db.models.message_log import MessageLog
 from app.db.models.occurrence import Occurrence
 from app.db.models.tenant import Tenant
-from app.integrations.whatsapp_cloud.phone import normalize_br_phone
+from app.integrations.evolution_api.phone import normalize_br_phone
 
 
 class DuplicateDriverPhoneError(Exception):

@@ -1,7 +1,7 @@
 """
 Orquestra o fluxo de negócio ponta a ponta: recebe uma mensagem já
-normalizada (app.integrations.whatsapp_cloud.webhook_parser) ou uma chamada
-da API, chama IA/geo/WhatsApp Cloud API conforme a etapa, e delega toda
+normalizada (app.integrations.evolution_api.webhook_parser) ou uma chamada
+da API, chama IA/geo/evolution-go conforme a etapa, e delega toda
 mudança de estado para app.state_machine.engine.transition — nenhuma
 função aqui muda occurrence.state diretamente.
 
@@ -36,13 +36,14 @@ from app.db.models.occurrence import Occurrence
 from app.db.models.tenant import Tenant
 from app.geo.distance import haversine_km
 from app.geo.geocoding import GeocodingError, geocode_address
-from app.integrations.whatsapp_cloud.phone import normalize_br_phone
-from app.integrations.whatsapp_cloud.client import (
-    WhatsAppAPIError,
-    WhatsAppCloudClient,
+from app.integrations.evolution_api.phone import normalize_br_phone
+from app.integrations.evolution_api.client import (
+    EvolutionAPIError,
+    EvolutionButton,
+    EvolutionClient,
     extract_message_id,
 )
-from app.integrations.whatsapp_cloud.webhook_parser import ParsedInboundMessage
+from app.integrations.evolution_api.webhook_parser import ParsedInboundMessage
 from app.schemas.ai_outputs import (
     FailureClassificationOutput,
     RadiusCheckOutput,
@@ -70,7 +71,6 @@ from app.services.message_templates import (
     DRIVER_REQUEST_CONTACT_INFO,
     RADIUS_APPROVED_CUSTOMER,
     RADIUS_DENIED_CUSTOMER,
-    build_template_components,
     render_template,
 )
 from app.state_machine.engine import transition
@@ -82,77 +82,34 @@ from app.state_machine.transitions.timeout import decide_after_timeout
 logger = logging.getLogger(__name__)
 
 
-def whatsapp_client_for(tenant: Tenant, settings: Settings) -> WhatsAppCloudClient:
-    return WhatsAppCloudClient(
-        phone_number_id=tenant.whatsapp_phone_number_id,
-        access_token=tenant.whatsapp_access_token,
-        api_version=settings.META_API_VERSION,
+def evolution_client_for(tenant: Tenant, settings: Settings) -> EvolutionClient:
+    return EvolutionClient(
+        base_url=settings.EVOLUTION_BASE_URL,
+        instance=tenant.evolution_instance,
+        token=tenant.evolution_token,
     )
 
 
 def _as_raw_payload(send_result: dict | str) -> dict:
-    """MessageLog.raw_payload guarda a resposta INTEIRA do envio — não só
-    o ID — pra investigações futuras terem o payload completo (status,
-    contato resolvido, timestamp) sem precisar reproduzir o envio."""
+    """MessageLog.raw_payload guarda a resposta INTEIRA do /send/text —
+    não só o ID — pra investigações futuras terem o payload completo
+    (status, chave, timestamp do gateway) sem precisar reproduzir o envio."""
     return send_result if isinstance(send_result, dict) else {"raw_text_response": send_result}
 
 
-async def _session_open(db: AsyncSession, tenant_id, phone: str) -> bool:
-    """A Cloud API só aceita texto livre dentro da janela de 24h aberta por
-    uma mensagem INBOUND do destinatário — fora dela é obrigatório usar
-    template aprovado. Consulta message_logs pela mensagem inbound mais
-    recente desse telefone, igual a Meta conta a janela. Flush explícito
-    necessário: a sessão roda com autoflush=False (app.db.session), então
-    um log_message(INBOUND) recém-adicionado nesta mesma transação (ex: a
-    própria mensagem que disparou este envio) não apareceria pra esta
-    query sem isso."""
-    await db.flush()
-    result = await db.execute(
-        select(MessageLog.created_at)
-        .where(
-            MessageLog.tenant_id == tenant_id,
-            MessageLog.phone == phone,
-            MessageLog.direction == MessageDirection.INBOUND,
-        )
-        .order_by(MessageLog.created_at.desc())
-        .limit(1)
-    )
-    last_inbound = result.scalar_one_or_none()
-    if last_inbound is None:
-        return False
-    return (datetime.now(timezone.utc) - last_inbound) < timedelta(hours=24)
-
-
-async def send_templated_or_free(
-    db: AsyncSession,
-    client: WhatsAppCloudClient,
-    tenant: Tenant,
-    key: str,
-    phone: str,
-    text: str | None,
-    **template_kwargs,
+async def send_text_message(
+    db: AsyncSession, client: EvolutionClient, tenant: Tenant, key: str, phone: str, text: str | None,
+    **_unused_template_kwargs,
 ) -> dict | str | None:
-    """Envia `text` (já renderizado via render_template) quando há uma
-    janela de 24h aberta com esse telefone; fora da janela, a Cloud API
-    rejeita texto livre — usa o template aprovado mapeado em
-    tenant.whatsapp_template_names[key] em vez disso. text=None (template
-    de texto livre não configurado) é no-op, igual ao comportamento antigo:
-    nunca inventamos conteúdo de negócio como fallback."""
+    """Envia `text` (já renderizado via render_template) como texto livre —
+    evolution-go não exige janela de 24h nem template pré-aprovado, ao
+    contrário do antigo gateway Cloud API. text=None (template não
+    configurado pro tenant) é no-op: nunca inventamos conteúdo de negócio
+    como fallback. `key`/`**_unused_template_kwargs` mantidos só pra não
+    quebrar assinatura dos chamadores; sem uso real aqui."""
     if text is None:
         return None
-
-    if await _session_open(db, tenant.id, phone):
-        return await client.send_text(phone, text)
-
-    template_name = tenant.whatsapp_template_names.get(key)
-    if not template_name:
-        logger.warning(
-            "Tenant %s sem template Meta aprovado pra '%s' e sem janela de 24h aberta com %s — "
-            "mensagem não enviada.", tenant.slug, key, phone,
-        )
-        return None
-    components = build_template_components(key, **template_kwargs)
-    return await client.send_template(phone, template_name, language="pt_BR", components=components)
+    return await client.send_text(phone, text)
 
 
 async def _notify_driver_best_effort(
@@ -161,33 +118,27 @@ async def _notify_driver_best_effort(
 ) -> None:
     """Envia um aviso ao motorista sem deixar uma falha de envio derrubar o
     fluxo — sempre chamado a partir do webhook, que precisa responder 200
-    (senão a Meta reenvia o evento). text=None (template não configurado)
+    (senão o gateway reenvia o evento). text=None (template não configurado)
     é no-op silencioso; o warning já saiu do render_template."""
     if not text:
         return
     try:
-        client = whatsapp_client_for(tenant, settings)
-        result = await send_templated_or_free(
-            db, client, tenant, key, occurrence.driver_phone, text, **template_kwargs
-        )
-        if result is None:
-            return
+        client = evolution_client_for(tenant, settings)
+        result = await client.send_text(occurrence.driver_phone, text)
         log_message(
             db, tenant.id, occurrence.id, MessageDirection.OUTBOUND, MessageParticipant.DRIVER,
             occurrence.driver_phone, MessageContentType.TEXT, text,
             external_message_id=extract_message_id(result), raw_payload=_as_raw_payload(result),
         )
-    except WhatsAppAPIError as exc:
+    except EvolutionAPIError as exc:
         logger.warning(
             "Falha ao avisar motorista (occurrence %s): %s", occurrence.id, exc
         )
 
 
-async def get_tenant_by_phone_number_id(db: AsyncSession, phone_number_id: str) -> Tenant | None:
+async def get_tenant_by_instance(db: AsyncSession, instance_name: str) -> Tenant | None:
     result = await db.execute(
-        select(Tenant).where(
-            Tenant.whatsapp_phone_number_id == phone_number_id, Tenant.is_active.is_(True)
-        )
+        select(Tenant).where(Tenant.evolution_instance == instance_name, Tenant.is_active.is_(True))
     )
     return result.scalar_one_or_none()
 
@@ -425,8 +376,8 @@ async def handle_driver_followup(
         ack_text = render_template(tenant, DRIVER_FOLLOWUP_ACK)
         if ack_text:
             try:
-                client = whatsapp_client_for(tenant, settings)
-                result = await send_templated_or_free(
+                client = evolution_client_for(tenant, settings)
+                result = await send_text_message(
                     db, client, tenant, DRIVER_FOLLOWUP_ACK, occurrence.driver_phone, ack_text
                 )
                 if result is not None:
@@ -435,7 +386,7 @@ async def handle_driver_followup(
                         occurrence.driver_phone, MessageContentType.TEXT, ack_text,
                         external_message_id=extract_message_id(result), raw_payload=_as_raw_payload(result),
                     )
-            except WhatsAppAPIError as exc:
+            except EvolutionAPIError as exc:
                 logger.warning(
                     "Falha ao confirmar recebimento de comentário do motorista (occurrence %s): %s",
                     occurrence.id, exc,
@@ -593,8 +544,8 @@ async def _classify_and_proceed(
         driver_text = render_template(tenant, DRIVER_REFUSED_CLOSED)
         if driver_text:
             try:
-                client = whatsapp_client_for(tenant, settings)
-                result = await send_templated_or_free(
+                client = evolution_client_for(tenant, settings)
+                result = await send_text_message(
                     db, client, tenant, DRIVER_REFUSED_CLOSED, message.phone, driver_text
                 )
                 if result is not None:
@@ -603,7 +554,7 @@ async def _classify_and_proceed(
                         message.phone, MessageContentType.TEXT, driver_text,
                         external_message_id=extract_message_id(result), raw_payload=_as_raw_payload(result),
                     )
-            except WhatsAppAPIError as exc:
+            except EvolutionAPIError as exc:
                 # Best-effort: a ocorrência já fechou (transition acima) —
                 # não deixa uma falha transitória de envio derrubar o
                 # webhook (que precisa sempre responder 200, senão a Meta
@@ -621,8 +572,8 @@ async def _classify_and_proceed(
         )
         if driver_text:
             try:
-                client = whatsapp_client_for(tenant, settings)
-                result = await send_templated_or_free(
+                client = evolution_client_for(tenant, settings)
+                result = await send_text_message(
                     db, client, tenant, DRIVER_REPORT_RECEIVED_NOTICE, message.phone, driver_text,
                     failure_reason=failure_reason_value,
                 )
@@ -632,7 +583,7 @@ async def _classify_and_proceed(
                         message.phone, MessageContentType.TEXT, driver_text,
                         external_message_id=extract_message_id(result), raw_payload=_as_raw_payload(result),
                     )
-            except WhatsAppAPIError as exc:
+            except EvolutionAPIError as exc:
                 # Best-effort: a ocorrência já está na fila humana (transition
                 # acima) — não deixa a notificação também derrubar o webhook.
                 logger.warning(
@@ -644,7 +595,7 @@ async def _classify_and_proceed(
         # transição pra AWAITING_CUSTOMER_REPLY_1 sozinho).
         try:
             await send_contact_attempt(db, settings, tenant, occurrence, attempt_number=1)
-        except WhatsAppAPIError as exc:
+        except EvolutionAPIError as exc:
             # Meta instável nesse momento (rate limit, etc.) — não pode
             # propagar: isso é chamado a partir do webhook, que precisa
             # sempre responder 200 (senão a Meta reenvia o mesmo evento
@@ -664,8 +615,8 @@ async def _classify_and_proceed(
             )
             if driver_text:
                 try:
-                    client = whatsapp_client_for(tenant, settings)
-                    result = await send_templated_or_free(
+                    client = evolution_client_for(tenant, settings)
+                    result = await send_text_message(
                         db, client, tenant, DRIVER_REPORT_RECEIVED_NOTICE, message.phone, driver_text,
                         failure_reason=failure_reason_value,
                     )
@@ -675,7 +626,7 @@ async def _classify_and_proceed(
                             message.phone, MessageContentType.TEXT, driver_text,
                             external_message_id=extract_message_id(result), raw_payload=_as_raw_payload(result),
                         )
-                except WhatsAppAPIError as notice_exc:
+                except EvolutionAPIError as notice_exc:
                     # Best-effort — a ocorrência já está a salvo na fila
                     # humana (transition acima); não deixa a notificação ao
                     # motorista também derrubar o webhook.
@@ -708,28 +659,27 @@ async def _ask_driver_for_clarification(
     quando o motivo já ficou claro mas falta telefone/endereço do
     cliente."""
     try:
-        client = whatsapp_client_for(tenant, settings)
+        client = evolution_client_for(tenant, settings)
         if decision.clarification_reason == "ambiguous":
             body_text = render_template(tenant, DRIVER_CLARIFICATION_REQUEST) or (
                 "Não consegui entender o motivo do insucesso. Pode escolher uma opção "
                 "abaixo ou descrever com mais detalhes?"
             )
-            if await _session_open(db, tenant.id, occurrence.driver_phone):
-                result = await client.send_interactive_buttons(
-                    occurrence.driver_phone, body_text,
-                    buttons=[
-                        (FailureReason.ABSENT.value, "Ausente"),
-                        (FailureReason.WRONG_ADDRESS.value, "Endereço errado"),
-                        (FailureReason.REFUSED.value, "Recusou"),
-                    ],
-                )
-            else:
-                result = None
+            result = await client.send_buttons(
+                occurrence.driver_phone,
+                title="Motivo do insucesso",
+                description=body_text,
+                buttons=[
+                    EvolutionButton(text="Ausente", id=FailureReason.ABSENT.value),
+                    EvolutionButton(text="Endereço errado", id=FailureReason.WRONG_ADDRESS.value),
+                    EvolutionButton(text="Recusou", id=FailureReason.REFUSED.value),
+                ],
+            )
         else:
             body_text = render_template(tenant, DRIVER_REQUEST_CONTACT_INFO) or (
                 "Recebido! Pode me mandar o telefone e o endereço do cliente pra eu continuar?"
             )
-            result = await send_templated_or_free(
+            result = await send_text_message(
                 db, client, tenant, DRIVER_REQUEST_CONTACT_INFO, occurrence.driver_phone, body_text,
             )
         if result is not None:
@@ -738,7 +688,7 @@ async def _ask_driver_for_clarification(
                 occurrence.driver_phone, MessageContentType.TEXT, body_text,
                 external_message_id=extract_message_id(result), raw_payload=_as_raw_payload(result),
             )
-    except WhatsAppAPIError as exc:
+    except EvolutionAPIError as exc:
         # Best-effort — chamado a partir do webhook, precisa sempre
         # responder 200. Se a repergunta falhar, a próxima mensagem do
         # motorista (mesmo sem ter visto a repergunta) ainda é processada
@@ -763,8 +713,8 @@ async def _ask_customer_for_clarification(
         "Desculpe, não entendi bem sua resposta. Pode explicar de novo, por favor?"
     )
     try:
-        client = whatsapp_client_for(tenant, settings)
-        result = await send_templated_or_free(
+        client = evolution_client_for(tenant, settings)
+        result = await send_text_message(
             db, client, tenant, CUSTOMER_CLARIFICATION_REQUEST, occurrence.customer_phone, text,
         )
         if result is not None:
@@ -773,7 +723,7 @@ async def _ask_customer_for_clarification(
                 occurrence.customer_phone, MessageContentType.TEXT, text,
                 external_message_id=extract_message_id(result), raw_payload=_as_raw_payload(result),
             )
-    except WhatsAppAPIError as exc:
+    except EvolutionAPIError as exc:
         logger.warning(
             "Falha ao reperguntar cliente (occurrence %s): %s", occurrence.id, exc
         )
@@ -810,25 +760,8 @@ async def send_contact_attempt(
     )
 
     if text and occurrence.customer_phone:
-        client = whatsapp_client_for(tenant, settings)
-        if await _session_open(db, tenant.id, occurrence.customer_phone):
-            result, resolved_phone = await client.send_text_resolved(occurrence.customer_phone, text)
-        else:
-            template_name = tenant.whatsapp_template_names.get(template_key)
-            resolved_phone = None
-            if not template_name:
-                logger.warning(
-                    "Tenant %s sem template Meta aprovado pra '%s' e sem janela de 24h aberta com %s — "
-                    "mensagem não enviada.", tenant.slug, template_key, occurrence.customer_phone,
-                )
-                result = None
-            else:
-                components = build_template_components(
-                    template_key, failure_reason=failure_reason_value, original_address=original_address_value,
-                )
-                result = await client.send_template(
-                    occurrence.customer_phone, template_name, language="pt_BR", components=components
-                )
+        client = evolution_client_for(tenant, settings)
+        result, resolved_phone = await client.send_text_resolved(occurrence.customer_phone, text)
         if resolved_phone and resolved_phone != occurrence.customer_phone:
             # O telefone digitado na fila humana pode não bater com o
             # formato que o WhatsApp usa internamente (confirmado em teste
@@ -855,8 +788,8 @@ async def send_contact_attempt(
             tenant, DRIVER_CONTACTING_CUSTOMER_NOTICE, failure_reason=failure_reason_value,
         )
         if driver_notice:
-            client = whatsapp_client_for(tenant, settings)
-            result = await send_templated_or_free(
+            client = evolution_client_for(tenant, settings)
+            result = await send_text_message(
                 db, client, tenant, DRIVER_CONTACTING_CUSTOMER_NOTICE, occurrence.driver_phone,
                 driver_notice, failure_reason=failure_reason_value,
             )
@@ -899,8 +832,8 @@ async def handle_customer_reply(
     driver_notice = render_template(tenant, DRIVER_CUSTOMER_REPLIED_NOTICE)
     if driver_notice:
         try:
-            client = whatsapp_client_for(tenant, settings)
-            result = await send_templated_or_free(
+            client = evolution_client_for(tenant, settings)
+            result = await send_text_message(
                 db, client, tenant, DRIVER_CUSTOMER_REPLIED_NOTICE, occurrence.driver_phone, driver_notice
             )
             if result is not None:
@@ -909,7 +842,7 @@ async def handle_customer_reply(
                     occurrence.driver_phone, MessageContentType.TEXT, driver_notice,
                     external_message_id=extract_message_id(result), raw_payload=_as_raw_payload(result),
                 )
-        except WhatsAppAPIError as exc:
+        except EvolutionAPIError as exc:
             # Best-effort — chamado a partir do webhook, que precisa sempre
             # responder 200 (senão o gateway reenvia o mesmo evento
             # indefinidamente). O resto do processamento da resposta segue.
@@ -1004,8 +937,8 @@ async def handle_customer_reply(
         )
         if customer_text:
             try:
-                client = whatsapp_client_for(tenant, settings)
-                result = await send_templated_or_free(
+                client = evolution_client_for(tenant, settings)
+                result = await send_text_message(
                     db, client, tenant, CUSTOMER_RESCHEDULE_CONFIRMED, occurrence.customer_phone,
                     customer_text, customer_message=message.content_text or "",
                 )
@@ -1015,7 +948,7 @@ async def handle_customer_reply(
                         occurrence.customer_phone, MessageContentType.TEXT, customer_text,
                         external_message_id=extract_message_id(result), raw_payload=_as_raw_payload(result),
                     )
-            except WhatsAppAPIError as exc:
+            except EvolutionAPIError as exc:
                 logger.warning(
                     "Falha ao avisar cliente sobre reagendamento confirmado (occurrence %s): %s",
                     occurrence.id, exc,
@@ -1036,8 +969,8 @@ async def handle_customer_reply(
     )
     if driver_text:
         try:
-            client = whatsapp_client_for(tenant, settings)
-            result = await send_templated_or_free(
+            client = evolution_client_for(tenant, settings)
+            result = await send_text_message(
                 db, client, tenant, driver_key, occurrence.driver_phone, driver_text, new_address="",
             )
             if result is not None:
@@ -1046,7 +979,7 @@ async def handle_customer_reply(
                     occurrence.driver_phone, MessageContentType.TEXT, driver_text,
                     external_message_id=extract_message_id(result), raw_payload=_as_raw_payload(result),
                 )
-        except WhatsAppAPIError as exc:
+        except EvolutionAPIError as exc:
             # Best-effort — a ocorrência já fechou (transition acima), não
             # deixa a notificação também derrubar o webhook.
             logger.warning(
@@ -1137,7 +1070,7 @@ async def _handle_new_address_request(
         else "Novo endereço fora do raio permitido — mantido como insucesso."
     )
 
-    client = whatsapp_client_for(tenant, settings)
+    client = evolution_client_for(tenant, settings)
 
     if within_radius:
         customer_key = RADIUS_APPROVED_CUSTOMER
@@ -1155,7 +1088,7 @@ async def _handle_new_address_request(
 
     if customer_text:
         try:
-            result = await send_templated_or_free(
+            result = await send_text_message(
                 db, client, tenant, customer_key, occurrence.customer_phone, customer_text, **customer_kwargs
             )
             if result is not None:
@@ -1164,7 +1097,7 @@ async def _handle_new_address_request(
                     occurrence.customer_phone, MessageContentType.TEXT, customer_text,
                     external_message_id=extract_message_id(result), raw_payload=_as_raw_payload(result),
                 )
-        except WhatsAppAPIError as exc:
+        except EvolutionAPIError as exc:
             # Best-effort — a ocorrência já fechou (transition acima), não
             # deixa a notificação também derrubar o webhook.
             logger.warning(
@@ -1172,7 +1105,7 @@ async def _handle_new_address_request(
             )
     if driver_text:
         try:
-            result = await send_templated_or_free(
+            result = await send_text_message(
                 db, client, tenant, driver_key, occurrence.driver_phone, driver_text, **driver_kwargs
             )
             if result is not None:
@@ -1181,7 +1114,7 @@ async def _handle_new_address_request(
                     occurrence.driver_phone, MessageContentType.TEXT, driver_text,
                     external_message_id=extract_message_id(result), raw_payload=_as_raw_payload(result),
                 )
-        except WhatsAppAPIError as exc:
+        except EvolutionAPIError as exc:
             logger.warning(
                 "Falha ao avisar motorista sobre desfecho do raio (occurrence %s): %s", occurrence.id, exc
             )
@@ -1213,8 +1146,8 @@ async def handle_contact_timeout(
 
     driver_text = render_template(tenant, DRIVER_DEFINITIVE_FAILURE)
     if driver_text:
-        client = whatsapp_client_for(tenant, settings)
-        result = await send_templated_or_free(
+        client = evolution_client_for(tenant, settings)
+        result = await send_text_message(
             db, client, tenant, DRIVER_DEFINITIVE_FAILURE, occurrence.driver_phone, driver_text
         )
         if result is not None:

@@ -45,12 +45,12 @@ from app.services.message_templates import (
     render_template,
 )
 from app.services.occurrence_service import (
+    evolution_client_for,
     log_ai_decision,
     log_message,
-    send_templated_or_free,
-    whatsapp_client_for,
+    send_text_message,
 )
-from app.integrations.whatsapp_cloud.client import extract_message_id
+from app.integrations.evolution_api.client import extract_message_id
 from app.state_machine.engine import transition
 
 
@@ -111,7 +111,7 @@ async def resolve_classification_escalation(
         reason="classificação resolvida manualmente pelo operador",
     )
 
-    client = whatsapp_client_for(tenant, settings)
+    client = evolution_client_for(tenant, settings)
 
     if next_state == OccurrenceState.CLOSED_DEFINITIVE_FAILURE:
         occurrence.closed_at = datetime.now(timezone.utc)
@@ -126,7 +126,7 @@ async def resolve_classification_escalation(
     driver_text = render_template(tenant, driver_key, **driver_kwargs)
 
     if driver_text:
-        result = await send_templated_or_free(
+        result = await send_text_message(
             db, client, tenant, driver_key, occurrence.driver_phone, driver_text, **driver_kwargs
         )
         if result is not None:
@@ -241,10 +241,10 @@ async def resolve_reply_escalation(
     occurrence.closed_at = datetime.now(timezone.utc)
     occurrence.closure_reason = closure_reason
 
-    client = whatsapp_client_for(tenant, settings)
+    client = evolution_client_for(tenant, settings)
 
     if customer_text and customer_key:
-        result = await send_templated_or_free(
+        result = await send_text_message(
             db, client, tenant, customer_key, occurrence.customer_phone, customer_text, **customer_kwargs
         )
         if result is not None:
@@ -254,7 +254,7 @@ async def resolve_reply_escalation(
                 external_message_id=extract_message_id(result),
             )
     if driver_text:
-        result = await send_templated_or_free(
+        result = await send_text_message(
             db, client, tenant, driver_key, occurrence.driver_phone, driver_text, **driver_kwargs
         )
         if result is not None:

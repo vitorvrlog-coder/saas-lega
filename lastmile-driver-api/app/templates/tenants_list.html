@@ -13,7 +13,7 @@
         <tr>
             <th>Nome</th>
             <th>Slug</th>
-            <th>Phone Number ID</th>
+            <th>Instância WhatsApp</th>
             <th>Raio (km)</th>
             <th>Status</th>
             <th></th>
@@ -24,7 +24,7 @@
         <tr>
             <td>{{ tenant.name }}</td>
             <td class="muted">{{ tenant.slug }}</td>
-            <td class="muted">{{ tenant.whatsapp_phone_number_id }}</td>
+            <td class="muted">{{ tenant.evolution_instance }}</td>
             <td>{{ tenant.allowed_radius_km }}</td>
             <td>
                 {% if tenant.is_active %}

@@ -1,37 +1,32 @@
 {% if stuck_disconnected %}
 <div>
     <p style="color: var(--pico-del-color)">{{ error }}</p>
-    {% if can_manage %}
     <p class="muted">O número desconectou do lado do WhatsApp (ex: removido do celular) e o gateway travou nesse estado — as tentativas normais de reconectar não funcionam mais. Recriar a instância (mesmo nome/token) e gerar um QR novo resolve.</p>
     <button type="button" class="secondary"
-            hx-post="/web/my-tenant/connection/reconnect"
-            hx-target="#my-tenant-connection" hx-swap="innerHTML"
-            hx-indicator="#my-tenant-reconnect-spinner">
+            hx-post="/backoffice/tenants/{{ tenant.id }}/reconnect"
+            hx-target="#tenant-connection" hx-swap="innerHTML"
+            hx-indicator="#reconnect-spinner">
         Reconectar WhatsApp
     </button>
-    <span id="my-tenant-reconnect-spinner" class="htmx-indicator muted">Recriando instância...</span>
-    {% else %}
-    <p class="muted">Fale com o administrador do tenant ou da plataforma pra reconectar o número.</p>
-    {% endif %}
+    <span id="reconnect-spinner" class="htmx-indicator muted">Recriando instância...</span>
+</div>
+{% elif error %}
+<div hx-get="/backoffice/tenants/{{ tenant.id }}/connection" hx-trigger="every 8s" hx-swap="outerHTML">
+    <p style="color: var(--pico-del-color)">{{ error }}</p>
 </div>
 {% elif status.get('LoggedIn') %}
 <div>
     <p class="badge badge-success">WhatsApp conectado</p>
     <p class="muted">Número: {{ status.get('Name') or '—' }}</p>
 </div>
-{% elif not can_manage %}
-<div hx-get="/web/my-tenant/connection" hx-trigger="every 15s" hx-swap="outerHTML">
-    <p class="badge badge-pending">WhatsApp não conectado</p>
-    <p class="muted">Fale com o administrador do tenant ou da plataforma pra reconectar o número.</p>
-</div>
 {% elif qr_data_url %}
-<div hx-get="/web/my-tenant/connection" hx-trigger="every 8s" hx-swap="outerHTML">
+<div hx-get="/backoffice/tenants/{{ tenant.id }}/connection" hx-trigger="every 8s" hx-swap="outerHTML">
     <p class="badge badge-pending">Aguardando pareamento</p>
     <p class="muted">Escaneie o QR code abaixo pelo WhatsApp do número que vai atender este tenant (o código se renova sozinho).</p>
     <img src="{{ qr_data_url }}" alt="QR code de pareamento" style="max-width: 260px; display:block; margin: 1rem auto;">
 </div>
 {% else %}
-<div hx-get="/web/my-tenant/connection" hx-trigger="every 8s" hx-swap="outerHTML">
+<div hx-get="/backoffice/tenants/{{ tenant.id }}/connection" hx-trigger="every 8s" hx-swap="outerHTML">
     <p class="muted">Gerando QR code...</p>
 </div>
 {% endif %}
