@@ -18,6 +18,20 @@ from app.web.deps import templates
 router = APIRouter(prefix="/checkout")
 
 
+def _client_ip(request: Request) -> str:
+    """IP real do motorista pra mandar como remoteIp pro Asaas — a doc deles
+    exige explicitamente que não seja o IP do servidor. uvicorn roda sem
+    --proxy-headers atrás do Nginx, então request.client.host é sempre o IP
+    interno do proxy; usar X-Real-IP (setado pelo Nginx) primeiro."""
+    real_ip = request.headers.get("x-real-ip")
+    if real_ip:
+        return real_ip
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.client.host if request.client else "0.0.0.0"
+
+
 async def _load_subscription(db: AsyncSession, settings: Settings, token: str) -> DriverSubscription | None:
     subscription_id = verify_checkout_token(settings, token)
     if subscription_id is None:
@@ -82,7 +96,7 @@ async def checkout_submit(
             },
         )
 
-    remote_ip = request.client.host if request.client else "0.0.0.0"
+    remote_ip = _client_ip(request)
     try:
         await capture_subscription_card(
             db, settings, subscription,

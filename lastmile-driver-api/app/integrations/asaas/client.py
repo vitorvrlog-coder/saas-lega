@@ -120,12 +120,12 @@ class AsaasClient:
         holder_info: dict,
         remote_ip: str,
     ) -> dict:
-        """POST /creditCard/tokenizeCreditCard — path confirmado só via
-        documentação pública, que mostrou também `/creditCard/tokenize` em
-        outra página; REVALIDAR contra o sandbox real antes de assumir
-        como definitivo. Devolve um creditCardToken reutilizável em
-        create_subscription (evita reenviar o cartão a cada cobrança).
-        Dado de cartão nunca é persistido por nós — só passa por aqui."""
+        """POST /creditCard/tokenizeCreditCard — path e obrigatoriedade do
+        remoteIp confirmados na doc oficial da Asaas (docs.asaas.com);
+        remoteIp deve ser o IP do cliente, nunca o do servidor. Devolve um
+        creditCardToken reutilizável em create_subscription (evita reenviar
+        o cartão a cada cobrança). Dado de cartão nunca é persistido por
+        nós — só passa por aqui."""
         payload = {
             "customer": customer_id,
             "creditCard": {
