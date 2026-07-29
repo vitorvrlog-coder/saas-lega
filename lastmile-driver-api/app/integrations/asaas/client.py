@@ -25,7 +25,12 @@ class AsaasAPIError(Exception):
         super().__init__(f"Asaas API retornou {status_code}: {body}")
 
 
-async def _request(method: str, url: str, headers: dict, **kwargs) -> dict:
+async def _request(method: str, url: str, headers: dict, *, sensitive: bool = False, **kwargs) -> dict:
+    """sensitive=True omite o corpo da resposta de erro do log e da exceção
+    levantada — usado pelo endpoint de tokenização de cartão, cujo erro de
+    validação às vezes ecoa de volta parte do payload enviado (dado de
+    cartão). Nunca logamos o payload de SAÍDA aqui de propósito (nenhuma
+    chamada atual precisa disso pra debug)."""
     logger.info("Asaas API → %s %s", method, url)
     try:
         async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT_SECONDS) as client:
@@ -35,8 +40,9 @@ async def _request(method: str, url: str, headers: dict, **kwargs) -> dict:
         raise AsaasAPIError(0, f"falha de rede/timeout: {exc}") from exc
 
     if response.status_code >= 400:
-        logger.warning("Asaas API ✗ %s %s status=%d body=%s", method, url, response.status_code, response.text)
-        raise AsaasAPIError(response.status_code, response.text)
+        body = "[corpo omitido — endpoint sensível a dado de cartão]" if sensitive else response.text
+        logger.warning("Asaas API ✗ %s %s status=%d body=%s", method, url, response.status_code, body)
+        raise AsaasAPIError(response.status_code, body)
 
     parsed = response.json()
     logger.info("Asaas API ← %s %s status=%d", method, url, response.status_code)
@@ -75,10 +81,18 @@ class AsaasClient:
         billing_type: str = "UNDEFINED",
         cycle: str = "MONTHLY",
         description: str = "Assinatura Heimdall Motorista",
+        credit_card_token: str | None = None,
+        remote_ip: str | None = None,
     ) -> dict:
         """billing_type="UNDEFINED" deixa o motorista escolher PIX ou
         cartão na tela de checkout hospedada pelo Asaas (invoiceUrl da
-        resposta) — não precisamos decidir isso no nosso lado."""
+        resposta). Passar credit_card_token (de tokenize_credit_card) com
+        billing_type="CREDIT_CARD" cria uma assinatura de cartão-em-arquivo
+        que o Asaas cobra sozinho a cada ciclo, sem exigir creditCard/
+        creditCardHolderInfo de novo. remote_ip: a documentação pública
+        diverge sobre exigir isso no reuso de token — mandamos quando
+        disponível, mas confirmar contra o sandbox real antes de assumir
+        que é sempre obrigatório ou sempre opcional."""
         payload = {
             "customer": customer_id,
             "billingType": billing_type,
@@ -87,8 +101,45 @@ class AsaasClient:
             "cycle": cycle,
             "description": description,
         }
+        if credit_card_token:
+            payload["creditCardToken"] = credit_card_token
+            if remote_ip:
+                payload["remoteIp"] = remote_ip
         url = f"{self.base_url}/subscriptions"
         return await _request("POST", url, self._headers(), json=payload)
+
+    async def tokenize_credit_card(
+        self,
+        customer_id: str,
+        *,
+        holder_name: str,
+        number: str,
+        expiry_month: str,
+        expiry_year: str,
+        ccv: str,
+        holder_info: dict,
+        remote_ip: str,
+    ) -> dict:
+        """POST /creditCard/tokenizeCreditCard — path confirmado só via
+        documentação pública, que mostrou também `/creditCard/tokenize` em
+        outra página; REVALIDAR contra o sandbox real antes de assumir
+        como definitivo. Devolve um creditCardToken reutilizável em
+        create_subscription (evita reenviar o cartão a cada cobrança).
+        Dado de cartão nunca é persistido por nós — só passa por aqui."""
+        payload = {
+            "customer": customer_id,
+            "creditCard": {
+                "holderName": holder_name,
+                "number": number,
+                "expiryMonth": expiry_month,
+                "expiryYear": expiry_year,
+                "ccv": ccv,
+            },
+            "creditCardHolderInfo": holder_info,
+            "remoteIp": remote_ip,
+        }
+        url = f"{self.base_url}/creditCard/tokenizeCreditCard"
+        return await _request("POST", url, self._headers(), sensitive=True, json=payload)
 
     async def get_subscription(self, subscription_id: str) -> dict:
         url = f"{self.base_url}/subscriptions/{subscription_id}"

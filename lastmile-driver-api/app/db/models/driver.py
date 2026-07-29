@@ -53,6 +53,9 @@ class Driver(Base):
 
     phone: Mapped[str] = mapped_column(String(32), nullable=False)
     name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Só usado hoje pro creditCardHolderInfo do Asaas (checkout de
+    # assinatura) — exigido por eles, nada além disso depende disso.
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     vehicle_plate: Mapped[str | None] = mapped_column(String(20), nullable=True)
     vehicle_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
     # Só dígitos, sem máscara — exigido pelo Asaas pra criar o customer da

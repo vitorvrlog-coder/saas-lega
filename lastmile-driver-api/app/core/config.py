@@ -74,6 +74,13 @@ class Settings(BaseSettings):
     def ASAAS_BASE_URL(self) -> str:
         return "https://api-sandbox.asaas.com/v3" if self.ASAAS_ENV == "sandbox" else "https://api.asaas.com/v3"
 
+    # Endereço PÚBLICO deste serviço (diferente de WEBHOOK_BASE_URL, que é
+    # só pra tráfego interno docker do evolution-go) — usado pra montar o
+    # link da página de checkout de cartão (app.web.checkout_routes),
+    # aberto direto do navegador do celular do motorista a partir do
+    # WhatsApp.
+    PUBLIC_BASE_URL: str = "https://driverapp.heimdall-logtech.com"
+
     # --- Autenticação dos endpoints internos (fila humana / consulta de ocorrências) ---
     # None também liga o "bypass de dev" do dashboard web (app.web.auth):
     # todo mundo vira um admin da plataforma fantasma, sem precisar logar —

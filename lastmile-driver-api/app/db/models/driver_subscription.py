@@ -48,9 +48,15 @@ class DriverSubscription(Base):
     # valor só transita, nunca é decidido pelo nosso código.
     billing_type: Mapped[str] = mapped_column(String(20), nullable=False, server_default="UNDEFINED")
     next_due_date: Mapped[datetime.date | None] = mapped_column(Date, nullable=True)
-    # Link de checkout da fatura corrente (invoiceUrl) — reenviado por
-    # WhatsApp a cada cobrança nova; sobrescrito a cada ciclo.
+    # Link da NOSSA página de checkout (app.web.checkout_routes, token
+    # assinado via app.core.driver_auth.create_checkout_token) — mandado
+    # por WhatsApp assim que a assinatura é iniciada, antes de existir
+    # qualquer cobrança no Asaas.
     checkout_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    # Token de cartão retornado por AsaasClient.tokenize_credit_card —
+    # nunca o número do cartão em si, só a referência reutilizável que o
+    # Asaas usa pra cobrar o ciclo seguinte sem pedir o cartão de novo.
+    asaas_credit_card_token: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

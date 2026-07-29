@@ -54,6 +54,8 @@
                     <span class="badge badge-progress">Pendente</span>
                     {% elif subscription.status.value == 'overdue' %}
                     <span class="badge badge-muted" style="color: var(--pico-del-color);">Vencida</span>
+                    {% elif subscription.status.value == 'card_declined' %}
+                    <span class="badge badge-muted" style="color: var(--pico-del-color);">Cartão recusado</span>
                     {% else %}
                     <span class="badge badge-muted">Cancelada</span>
                     {% endif %}

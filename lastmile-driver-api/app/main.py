@@ -8,6 +8,7 @@ from app.api.v1 import driver, health, occurrences, route_capture, webhooks
 from app.core.logging import setup_logging
 from app.web.auth import NotAuthenticatedError
 from app.web.backoffice_routes import router as backoffice_router
+from app.web.checkout_routes import router as checkout_router
 from app.web.routes import router as web_router
 from app.workers.timeout_checker import start_timeout_checker, stop_timeout_checker
 
@@ -30,6 +31,7 @@ app.include_router(driver.router, prefix="/api/v1", tags=["driver"])
 app.include_router(route_capture.router, prefix="/api/v1", tags=["route-capture"])
 app.include_router(web_router, tags=["web"])
 app.include_router(backoffice_router, tags=["backoffice"])
+app.include_router(checkout_router, tags=["checkout"])
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 

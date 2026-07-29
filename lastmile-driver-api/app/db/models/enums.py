@@ -75,10 +75,12 @@ class InvoiceEntryStatus(str, enum.Enum):
 
 
 class DriverSubscriptionStatus(str, enum.Enum):
-    PENDING = "pending"    # cobrança criada no Asaas, motorista ainda não pagou a 1ª fatura
-    ACTIVE = "active"      # pagamento confirmado, em dia
-    OVERDUE = "overdue"    # fatura de um ciclo venceu sem pagamento
-    CANCELED = "canceled"  # assinatura cancelada (no Asaas ou por nós)
+    PENDING = "pending"              # customer criado no Asaas, motorista ainda não capturou o cartão
+    ACTIVE = "active"                # cartão capturado e pagamento confirmado, em dia
+    OVERDUE = "overdue"              # fatura de um ciclo venceu sem pagamento
+    CARD_DECLINED = "card_declined"  # cobrança recusada pela operadora/análise de risco (ver eventos
+                                      # PAYMENT_CREDIT_CARD_CAPTURE_REFUSED / PAYMENT_REPROVED_BY_RISK_ANALYSIS)
+    CANCELED = "canceled"            # assinatura cancelada (no Asaas ou por nós)
 
 
 class DriverPlatform(str, enum.Enum):
