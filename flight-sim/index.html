@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#05080c">
+<title>Falcão — Simulador de Voo</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<canvas id="gl" tabindex="0" aria-label="Cena 3D do simulador"></canvas>
+<canvas id="hud" aria-hidden="true"></canvas>
+
+<!-- Controles na tela durante o voo -->
+<div id="overlay-hud">
+  <div id="stick" aria-label="Manche virtual">
+    <div id="stick-ring"></div>
+    <div id="stick-cross"></div>
+    <div id="stick-knob"></div>
+    <span class="wlabel">MANCHE</span>
+  </div>
+  <div id="thr" aria-label="Manete de potência">
+    <span class="wlabel top">MANETE</span>
+    <div id="thr-track">
+      <div id="thr-mil"></div>
+      <div id="thr-rpm"></div>
+      <div id="thr-fill"></div>
+      <div id="thr-handle"></div>
+    </div>
+    <div id="thr-val">0%</div>
+    <div id="thr-tag"></div>
+  </div>
+  <div id="touchbar">
+    <button id="tb-gear">TREM</button><button id="tb-flaps">FLAPS</button>
+    <button id="tb-engine">MOTOR</button><button id="tb-brake">FREIO</button>
+    <button id="tb-cam">CÂM</button><button id="tb-view">VISTA</button>
+    <button id="tb-dest">DEST</button><button id="btn-mobile-pause">II</button>
+    <button id="tb-rl">◀ LEME</button><button id="tb-rr">LEME ▶</button>
+  </div>
+</div>
+
+<!-- Relatório de pouso e acidente -->
+<div id="landing" role="status">
+  <button id="landing-close" aria-label="Fechar">×</button>
+  <div class="small">AVALIAÇÃO DO POUSO</div>
+  <div id="landing-rating">—</div>
+  <div id="landing-rows"></div>
+  <div id="landing-notes"></div>
+</div>
+<div id="crash" role="alertdialog">
+  <div class="small">FIM DE VOO</div>
+  <h2>ACIDENTE</h2>
+  <p id="crash-reason"></p>
+  <p id="crash-detail" class="dim"></p>
+  <div class="row"><button class="btn primary" id="crash-restart">REINICIAR VOO</button><button class="btn" id="crash-menu">MENU PRINCIPAL</button></div>
+</div>
+
+<div id="loading"><div class="box"><div class="small">CARREGANDO REGIÃO</div><div class="bar"><div id="load-bar"></div></div><p class="dim">Gerando relevo, cidades e aeroportos…</p></div></div>
+
+<!-- Menus -->
+<div id="menu-layer" class="show">
+  <section class="screen show" id="scr-main">
+    <div class="brand"><span class="tag">SIMULADOR DE VOO · MUNDO ABERTO</span><h1>FALCÃO</h1><p class="dim">Acelere, decole, voe livremente e pouse. Física de voo em tempo real.</p></div>
+    <div class="menu">
+      <button class="btn primary" id="btn-start">INICIAR VOO</button>
+      <button class="btn" id="btn-aircraft">ESCOLHER AERONAVE</button>
+      <button class="btn" id="btn-controls">CONTROLES</button>
+      <button class="btn" id="btn-settings">CONFIGURAÇÕES</button>
+    </div>
+    <p class="foot dim">Dica: clique no jogo para capturar o mouse · Esc libera o mouse e abre o menu</p>
+  </section>
+
+  <section class="screen" id="scr-briefing">
+    <div class="panel">
+      <h2>PLANO DE VOO</h2>
+      <label>Aeroporto de partida<select id="sel-airport"></select></label>
+      <label>Posição inicial<select id="sel-pos"><option value="runway">Cabeceira da pista (pronto para decolar)</option><option value="apron">Pátio de estacionamento (táxi até a pista)</option></select></label>
+      <label>Horário<select id="sel-time"><option value="day">Dia</option><option value="dusk">Entardecer</option></select></label>
+      <div class="steps dim"><b>Decolagem:</b> R liga os motores → W até potência máxima → ao passar de ~280 km/h puxe o manche suavemente → F recolhe o trem.</div>
+      <div class="row"><button class="btn primary" id="btn-fly">DECOLAR</button><button class="btn ghost" id="btn-briefing-back">VOLTAR</button></div>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-aircraft">
+    <div class="panel wide">
+      <h2>ESCOLHER AERONAVE</h2>
+      <div class="cards">
+        <div class="card sel"><div class="chip">DISPONÍVEL</div><h3>F-X FALCÃO</h3><p class="dim">Caça multifunção bimotor de 4ª geração.</p>
+          <ul><li>Envergadura 11 m · comprimento 15,5 m</li><li>Massa 11 t · empuxo 80 kN (130 kN pós-comb.)</li><li>Velocidade máx. ≈ 1 260 km/h</li><li>Estol ≈ 200 km/h (config. de pouso)</li><li>Limite estrutural ≈ 9–11 G</li></ul></div>
+        <div class="card off"><div class="chip">EM BREVE</div><h3>F-Y TUFÃO</h3><p class="dim">Interceptador de alta velocidade.</p></div>
+        <div class="card off"><div class="chip">EM BREVE</div><h3>A-Z ÁGUIA</h3><p class="dim">Aeronave de ataque leve, pouso curto.</p></div>
+      </div>
+      <div class="row"><button class="btn" data-back>VOLTAR</button></div>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-controls">
+    <div class="panel wide">
+      <h2>CONTROLES</h2>
+      <div class="cols">
+        <div>
+          <h4>Mouse e manche</h4>
+          <ul class="plain">
+            <li><b>Clique no jogo</b> captura o mouse (Pointer Lock). <b>Esc</b> libera e abre o menu.</li>
+            <li><b>Mouse ↕</b> arfagem (para baixo = puxar) · <b>Mouse ↔</b> inclinação lateral</li>
+            <li><b>Setas</b> também movem o manche · <b>Roda do mouse</b> ajusta a potência</li>
+            <li>Sem captura do mouse, o manche segue a posição do cursor; o manche e o manete na tela são arrastáveis.</li>
+            <li>No celular: arraste o manche, o manete e use os botões laterais.</li>
+          </ul>
+        </div>
+        <div><h4>Teclas (clique para remapear)</h4><div id="bind-rows"></div>
+          <div class="row"><button class="btn ghost small-btn" id="btn-bind-reset">Restaurar padrão</button></div></div>
+      </div>
+      <div class="row"><button class="btn" data-back>VOLTAR</button></div>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-settings">
+    <div class="panel wide">
+      <h2>CONFIGURAÇÕES</h2>
+      <div class="cols">
+        <div>
+          <h4>Pilotagem</h4>
+          <label>Sensibilidade do mouse <output id="set-sens-v"></output><input id="set-sens" type="range" min="0.3" max="3" step="0.05"></label>
+          <label>Zona neutra do manche <output id="set-dead-v"></output><input id="set-dead" type="range" min="0" max="0.3" step="0.01"></label>
+          <label>Retorno ao centro do manche <output id="set-center-v"></output><input id="set-center" type="range" min="0" max="1" step="0.05"></label>
+          <label class="check"><input id="set-invert" type="checkbox"> Inverter eixo vertical do mouse</label>
+          <label>Unidades<select id="set-units"><option value="metric">Métrico (km/h, m, m/s)</option><option value="aviation">Aviação (kt, ft, ft/min)</option></select></label>
+        </div>
+        <div>
+          <h4>Imagem e som</h4>
+          <label>Qualidade gráfica<select id="set-quality"><option value="low">Baixa (distância curta)</option><option value="medium">Média</option><option value="high">Alta (distância longa + sombras)</option></select></label>
+          <label class="check"><input id="set-shadows" type="checkbox"> Sombras</label>
+          <label>Horário<select id="set-time"><option value="day">Dia</option><option value="dusk">Entardecer</option></select></label>
+          <label>Campo de visão <output id="set-fov-v"></output><input id="set-fov" type="range" min="55" max="100" step="1"></label>
+          <label>Volume <output id="set-volume-v"></output><input id="set-volume" type="range" min="0" max="1" step="0.05"></label>
+        </div>
+      </div>
+      <div class="row"><button class="btn" data-back>VOLTAR</button></div>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-pause">
+    <div class="panel">
+      <h2 id="pause-title">PAUSADO</h2>
+      <div class="menu">
+        <button class="btn primary" id="btn-resume">CONTINUAR</button>
+        <button class="btn" id="btn-restart">REINICIAR VOO</button>
+        <button class="btn" id="btn-pause-controls">CONTROLES</button>
+        <button class="btn" id="btn-pause-settings">CONFIGURAÇÕES</button>
+        <button class="btn ghost" id="btn-menu">MENU PRINCIPAL</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="nowebgl" hidden><div class="box"><h2>WebGL indisponível</h2><p>Seu navegador ou dispositivo não conseguiu iniciar o WebGL. Ative a aceleração de hardware ou tente outro navegador.</p></div></div>
+
+<script src="assets/vendor/three.min.js"></script>
+<script src="src/util.js"></script>
+<script src="src/terrain.js"></script>
+<script src="src/settings.js"></script>
+<script src="src/flightPhysics.js"></script>
+<script src="src/world.js"></script>
+<script src="src/aircraft.js"></script>
+<script src="src/controls.js"></script>
+<script src="src/audio.js"></script>
+<script src="src/hud.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>
