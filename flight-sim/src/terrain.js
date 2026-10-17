@@ -81,6 +81,10 @@
 
   const CITY_ELEV = CITY_DEFS.map((c) => Math.max(10, natural(c.x, c.z)));
 
+  // áreas planas extras (vilas exploráveis) registradas por outros módulos
+  const FLAT_ZONES = [];
+  function addFlatZone(z) { FLAT_ZONES.push(z); }
+
   function rectDistance(u, w, r) {
     const du = Math.max(r[0] - u, 0, u - r[1]);
     const dw = Math.max(r[2] - w, 0, w - r[3]);
@@ -102,6 +106,13 @@
         const f = 1 - M.smoothstep(0, 900, rectDistance(l[0], l[1], ap.flatRect));
         if (f > 0) h = M.lerp(h, ap.elev, f);
       }
+    }
+    for (let i = 0; i < FLAT_ZONES.length; i++) {
+      const fz = FLAT_ZONES[i];
+      const du = Math.max(fz.x0 - x, 0, x - fz.x1), dw = Math.max(fz.z0 - z, 0, z - fz.z1);
+      if (du > fz.blend || dw > fz.blend) continue;
+      const f = 1 - M.smoothstep(0, fz.blend, Math.hypot(du, dw));
+      if (f > 0) h = M.lerp(h, fz.elev, f);
     }
     for (let i = 0; i < CITY_DEFS.length; i++) {
       const c = CITY_DEFS[i];
@@ -166,6 +177,7 @@
       if (rectDistance(l[0], l[1], ap.flatRect) < 120) return true;
     }
     for (const c of CITY_DEFS) if (Math.hypot(x - c.x, z - c.z) < c.r + 120) return true;
+    for (const fz of FLAT_ZONES) if (x > fz.x0 - 40 && x < fz.x1 + 40 && z > fz.z0 - 40 && z < fz.z1 + 40) return true;
     return false;
   }
 
@@ -279,7 +291,7 @@
   FS.Terrain = {
     SURF, AIRPORTS, CITY_DEFS, CITY_ELEV, ROADS,
     heightAt, groundHeight, normalAt, surfaceAt, nearestAirport, airportAt, isCleared,
-    hitsBuilding, hasColliders, buildings, cityBuildings, airportStructures, colliders,
+    hitsBuilding, hasColliders, addFlatZone, FLAT_ZONES, straightRoad, buildings, cityBuildings, airportStructures, colliders,
     natural,
     forestDensity: (x, z) => M.fbm(x / 520 + 31, z / 520 - 17, 3, 71),
   };

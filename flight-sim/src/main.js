@@ -35,8 +35,14 @@
   const hud = new FS.Hud($('hud'));
   const controls = new FS.Controls(canvas, {
     onAction: (a) => doAction(a),
-    onEscape: () => { if (game.state === 'flying') openPause(); else if (game.state === 'paused' && $('scr-pause').classList.contains('show')) resumeFlight(); },
-    onUnlock: () => { if (game.state === 'flying') openPause(); },
+    onEscape: () => {
+      if (game.mode === 'foot' && FS.Foot.panelOpen) return;   // o modo a pé fecha o painel
+      if (game.state === 'flying') openPause(); else if (game.state === 'paused' && $('scr-pause').classList.contains('show')) resumeFlight();
+    },
+    onUnlock: () => {
+      if (game.mode === 'foot' && (FS.Foot.panelOpen || FS.Foot.unlockingForPanel)) { FS.Foot.unlockingForPanel = false; return; }
+      if (game.state === 'flying') openPause();
+    },
     onBrakeTap: () => model.releaseParkBrake(),
   });
   FS.isTouch = false;
@@ -52,6 +58,8 @@
     lastExternal: 'chase',
     hasFlown: false,
     maxDt: 0.1, maxSteps: 40,
+    mode: 'flight',         // flight | foot
+    survival: false,        // modo sobrevivência (mundo aberto a pé)
   };
   const CAM_ORDER = ['third', 'chase', 'free'];
   const camState = {
@@ -81,18 +89,21 @@
   window.addEventListener('orientationchange', () => setTimeout(resize, 120));
 
   /* -------------------------------------------------------------------- voos */
-  const dstate = (name) => game.state === name;
-  function spawn() {
-    const ap = T.AIRPORTS.find((a) => a.id === S.startAirport) || T.AIRPORTS[0];
-    game.airport = ap;
-    const sp = ap.spawns[S.startPos] || ap.spawns.runway;
-    const w = ap.world(sp.u, sp.w);
+  function setModelEvents() {
     model.events = {
       gear: () => FS.Audio.gear(),
       flaps: () => FS.Audio.flaps(),
       touch: (sink) => FS.Audio.touch(sink),
       crash: () => { FS.Audio.crash(); },
     };
+  }
+  const dstate = (name) => game.state === name;
+  function spawn() {
+    const ap = T.AIRPORTS.find((a) => a.id === S.startAirport) || T.AIRPORTS[0];
+    game.airport = ap;
+    const sp = ap.spawns[S.startPos] || ap.spawns.runway;
+    const w = ap.world(sp.u, sp.w);
+    setModelEvents();
     model.reset({ x: w[0], z: w[1] }, sp.heading);
     controls.resetControls();
     controls.throttle = 0;
@@ -146,6 +157,14 @@
   }
 
   function backToMenu() {
+    if (game.survival) {
+      if (FS.Foot.P && !FS.Foot.P.dead && game.mode === 'foot') FS.Foot.save(true);
+      FS.Foot.active = false; FS.Foot.closePanel(); FS.Foot.ui.root.classList.remove('on'); FS.Foot.flash.intensity = 0;
+      if (FS.Foot.playerModel) FS.Foot.playerModel.group.visible = false;
+      game.survival = false; game.mode = 'flight';
+      world.setPreset(S.time);
+    }
+    refreshMenu();
     game.state = 'menu';
     controls.active = false;
     controls.exitLock();
@@ -167,14 +186,18 @@
     controls.releaseAll();
     controls.exitLock();
     FS.Audio.setPaused(true);
-    $('pause-title').textContent = model.crashed ? 'AERONAVE DESTRUÍDA' : 'PAUSADO';
-    $('btn-resume').hidden = !!model.crashed;
+    $('pause-title').textContent = game.mode === 'flight' && model.crashed ? 'AERONAVE DESTRUÍDA' : 'PAUSADO';
+    $('btn-resume').hidden = game.mode === 'flight' && !!model.crashed;
+    $('btn-save').hidden = !game.survival;
+    $('btn-restart').textContent = game.survival ? 'CARREGAR JOGO SALVO' : 'REINICIAR VOO';
+    $('btn-restart').hidden = game.survival && !FS.Foot.hasSave();
+    if (game.mode === 'foot') { FS.Foot.keys.clear(); FS.Foot.fire = false; }
     showScreen('pause');
   }
   function resumeFlight() {
     if (game.state !== 'paused') return;
     game.state = 'flying';
-    controls.active = true;
+    controls.active = game.mode === 'flight';
     lastTime = performance.now();
     game.acc = 0;
     FS.Audio.unlock();
@@ -191,6 +214,7 @@
   function doAction(a) {
     FS.Audio.unlock();
     if (game.state === 'menu' || game.state === 'loading') return;
+    if (game.mode !== 'flight') return;
     if (a === 'pause') { togglePause(); return; }
     if (game.state !== 'flying') return;
     switch (a) {
@@ -321,6 +345,7 @@
     if (model.crashed && !crashShown) {
       crashShown = true;
       aircraft.root.visible = false;
+      if (game.survival) { survivalCrash(); return; }
       showCrash();
     }
     if (model.touchdown && model.touchdown.stopped && !model.crashed) updateLanding(model.touchdown, true);
@@ -373,7 +398,9 @@
     frames++; fpsAcc += rawDt;
     if (fpsAcc > 0.5) { fps = frames / fpsAcc; frames = 0; fpsAcc = 0; }
 
+    if (game.mode === 'foot') { footFrame(dt); return; }
     const flying = game.state === 'flying';
+    if (flying && game.survival) FS.Foot.backgroundUpdate(dt);
     if (flying) {
       // entradas
       controls.update(dt);
@@ -423,6 +450,89 @@
     renderer.render(scene, camera);
   }
 
+  /* ---------------------------------------------------------- modo sobrevivência */
+  const footFocus = new THREE.Vector3();
+  function footFrame(dt) {
+    const F = FS.Foot;
+    const playing = game.state === 'flying';
+    F.update(playing ? dt : 0);
+    if (playing) game.time += dt;
+    syncRender(1);
+    aircraft.update(model, game.time);
+    cockpit.group.visible = false;
+    aircraft.model.visible = true;
+    const P = F.P;
+    footFocus.set(P.x, P.y, P.z);
+    world.update([P.x, P.y, P.z], camera.position, playing ? dt : 0, footFocus);
+    hud.clear();
+    FS.Audio.update(model, playing ? dt : 0, 0, {});
+    renderer.render(scene, camera);
+  }
+
+  async function startSurvival(load) {
+    FS.Audio.unlock(); FS.Audio.click();
+    game.state = 'loading';
+    showScreen(null);
+    $('loading').classList.add('show');
+    $('load-title').textContent = 'CARREGANDO VILA ESPERANÇA';
+    applyQuality();
+    setModelEvents();
+    crashShown = false; landingShown = null;
+    game.survival = true; game.mode = 'foot';
+    controls.active = false; controls.exitLock();
+    $('overlay-hud').classList.remove('on');
+    $('landing').classList.remove('show'); $('crash').classList.remove('show');
+    FS.Foot.start(load);
+    aircraft.root.visible = true;
+    const c = FS.Town.center;
+    world.setTimeOfDay(FS.Sim.hour());
+    await world.preload(c.x, c.z, (p) => { $('load-bar').style.width = Math.round(p * 100) + '%'; });
+    $('loading').classList.remove('show');
+    $('load-title').textContent = 'CARREGANDO REGIÃO';
+    game.state = 'flying';
+    lastTime = performance.now();
+    FS.Audio.setPaused(false);
+    canvas.focus();
+  }
+
+  // entrar e sair do caça a partir do mundo a pé
+  function enterAircraftFromFoot() {
+    game.mode = 'flight';
+    controls.resetControls(); controls.active = true;
+    crashShown = false; landingShown = null; takeoffAnnounced = false;
+    camState.hasInit = false;
+    setCamMode('chase', true);
+    $('overlay-hud').classList.add('on');
+    aircraft.root.visible = true;
+    lastTime = performance.now(); game.acc = 0;
+    const touch = document.body.classList.contains('touch');
+    hud.notify(touch ? 'MOTOR liga os motores · SAIR deixa o caça parado no solo' : 'R liga os motores · X sai do caça (parado no solo)', '#6dffa8', 7);
+  }
+  function exitAircraft() {
+    if (!(game.survival && game.mode === 'flight' && game.state === 'flying')) return;
+    if (!model.onGround || model.gs > 3) { hud.notify('Pouse e pare a aeronave para sair.', '#ffc83a', 3); return; }
+    game.mode = 'foot';
+    controls.active = false; controls.releaseAll();
+    $('overlay-hud').classList.remove('on');
+    $('landing').classList.remove('show');
+    FS.Foot.exitJet();
+  }
+  function survivalCrash() {
+    game.mode = 'foot';
+    controls.active = false; controls.releaseAll(); controls.exitLock();
+    $('overlay-hud').classList.remove('on');
+    const F = FS.Foot;
+    F.active = true; F.ui.root.classList.add('on');
+    F.P.x = model.p[0]; F.P.z = model.p[2]; F.P.y = model.p[1];
+    F.die('Você morreu na queda do caça: ' + model.crashReason.toLowerCase() + '.');
+  }
+  window.addEventListener('keydown', (e) => { if (e.code === 'KeyX' && !e.repeat) exitAircraft(); });
+
+  function refreshMenu() {
+    const has = FS.Foot.hasSave();
+    $('btn-continue').hidden = !has;
+  }
+
   /* ----------------------------------------------------- manche e manete na tela */
   const stickKnob = $('stick-knob'), throttleFill = $('thr-fill'), throttleHandle = $('thr-handle'), throttleVal = $('thr-val');
   function drawWidgets() {
@@ -454,6 +564,13 @@
   function closeSub() { showScreen(stack.pop() || 'main'); }
 
   $('btn-start').addEventListener('click', () => { FS.Audio.unlock(); FS.Audio.click(); stack.length = 0; fillBriefing(); showScreen('briefing'); });
+  $('btn-new').addEventListener('click', () => {
+    if (FS.Foot.hasSave() && !confirm('Começar um novo jogo? O progresso salvo será substituído no próximo salvamento.')) return;
+    startSurvival(false);
+  });
+  $('btn-continue').addEventListener('click', () => startSurvival(true));
+  $('btn-save').addEventListener('click', () => { FS.Audio.click(); FS.Foot.save(false); });
+  $('tb-exit').addEventListener('pointerdown', (e) => { e.preventDefault(); exitAircraft(); });
   $('btn-aircraft').addEventListener('click', () => { FS.Audio.unlock(); FS.Audio.click(); openSub('aircraft'); });
   $('btn-controls').addEventListener('click', () => { FS.Audio.unlock(); FS.Audio.click(); openSub('controls'); });
   $('btn-settings').addEventListener('click', () => { FS.Audio.unlock(); FS.Audio.click(); openSub('settings'); });
@@ -461,7 +578,11 @@
   $('btn-briefing-back').addEventListener('click', () => { FS.Audio.click(); showScreen('main'); });
   $('btn-fly').addEventListener('click', () => { startFlight(); });
   $('btn-resume').addEventListener('click', () => resumeFlight());
-  $('btn-restart').addEventListener('click', () => { FS.Audio.click(); restartFlight(); });
+  $('btn-restart').addEventListener('click', () => {
+    FS.Audio.click();
+    if (game.survival) { showScreen(null); game.mode = 'foot'; controls.active = false; $('overlay-hud').classList.remove('on'); FS.Foot.start(true); game.state = 'flying'; lastTime = performance.now(); FS.Audio.setPaused(false); return; }
+    restartFlight();
+  });
   $('btn-pause-controls').addEventListener('click', () => { FS.Audio.click(); openSub('controls'); });
   $('btn-pause-settings').addEventListener('click', () => { FS.Audio.click(); openSub('settings'); });
   $('btn-menu').addEventListener('click', () => { FS.Audio.click(); backToMenu(); });
@@ -501,6 +622,10 @@
   $('set-quality').addEventListener('change', (e) => { S.quality = e.target.value; S.shadows = null; $('set-shadows').checked = FS.Settings.quality().shadows; FS.Settings.save(); applyQuality(); });
   $('set-shadows').checked = FS.Settings.quality().shadows;
   $('set-shadows').addEventListener('change', (e) => { S.shadows = e.target.checked; FS.Settings.save(); applyQuality(); });
+  $('set-voices').checked = S.voices !== false;
+  $('set-voices').addEventListener('change', (e) => { S.voices = e.target.checked; FS.Settings.save(); });
+  $('set-day').value = String(S.dayLength || 24);
+  $('set-day').addEventListener('change', (e) => { S.dayLength = +e.target.value; FS.Settings.save(); FS.Sim.dayLength = S.dayLength * 60; });
   $('set-time').value = S.time;
   $('set-time').addEventListener('change', (e) => { S.time = e.target.value; FS.Settings.save(); world.setPreset(S.time); });
 
@@ -556,12 +681,19 @@
   document.addEventListener('touchmove', (e) => { if (game.state === 'flying' && e.cancelable) e.preventDefault(); }, { passive: false });
 
   /* -------------------------------------------------------------------- partida */
+  FS.Foot.init({
+    scene, camera, renderer, world, aircraft, model, canvas, settings: S,
+    onEnterAircraft: enterAircraftFromFoot,
+    onMenu: () => backToMenu(),
+    onPause: () => openPause(),
+  });
+  refreshMenu();
   applyQuality();
   world.setPreset(S.time);
   spawn();
   syncRender(1);
   showScreen('main');
   FS.Audio.volume = S.volume;
-  window.__fs = { game, model, controls, world, hud, camera, scene, aircraft, renderer, startFlight, setCamMode, doAction, openPause, resumeFlight, get fps() { return fps; } };
+  window.__fs = { foot: FS.Foot, sim: FS.Sim, startSurvival, exitAircraft, game, model, controls, world, hud, camera, scene, aircraft, renderer, startFlight, setCamMode, doAction, openPause, resumeFlight, get fps() { return fps; } };
   requestAnimationFrame((t) => { lastTime = t; frame(t); });
 })();

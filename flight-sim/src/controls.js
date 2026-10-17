@@ -229,7 +229,7 @@
     stickEl.addEventListener('pointerdown', (e) => {
       if (!controls.active) return;
       e.preventDefault();
-      pid = e.pointerId; stickEl.setPointerCapture(pid); apply(e);
+      pid = e.pointerId; try { stickEl.setPointerCapture(pid); } catch (err) { /* ignora */ } apply(e);
     });
     stickEl.addEventListener('pointermove', (e) => { if (e.pointerId === pid) { e.preventDefault(); apply(e); } });
     const end = (e) => { if (e.pointerId === pid) { pid = null; controls.uiStick = null; } };
@@ -243,7 +243,7 @@
       const r = el.getBoundingClientRect();
       controls.throttle = M.clamp(1 - (e.clientY - r.top - 8) / (r.height - 16), 0, 1);
     };
-    el.addEventListener('pointerdown', (e) => { e.preventDefault(); pid = e.pointerId; el.setPointerCapture(pid); apply(e); });
+    el.addEventListener('pointerdown', (e) => { e.preventDefault(); pid = e.pointerId; try { el.setPointerCapture(pid); } catch (err) { /* ignora */ } apply(e); });
     el.addEventListener('pointermove', (e) => { if (e.pointerId === pid) apply(e); });
     const end = (e) => { if (e.pointerId === pid) pid = null; };
     el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);

@@ -21,6 +21,23 @@
     },
   };
 
+  PRESETS.night = {
+    zenith: [0.01, 0.02, 0.06], horizon: [0.07, 0.09, 0.16], fog: [0.05, 0.06, 0.11],
+    sun: [-0.3, 0.55, -0.4], sunColor: 0x8aa0d8, sunI: 0.16, hemiSky: 0x2a3a5a, hemiGround: 0x101015, hemiI: 0.22,
+    cloud: 0x3a4250, water: 0x0a1a2a, glow: [0.15, 0.18, 0.3],
+  };
+  const lerp3 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  const lerpHex = (a, b, t) => new THREE.Color(a).lerp(new THREE.Color(b), t).getHex();
+  function mixPreset(a, b, t) {
+    const o = {};
+    for (const k in a) {
+      if (Array.isArray(a[k])) o[k] = lerp3(a[k], b[k], t);
+      else if (k === 'sunI' || k === 'hemiI') o[k] = a[k] + (b[k] - a[k]) * t;
+      else o[k] = lerpHex(a[k], b[k], t);
+    }
+    return o;
+  }
+
   /* ------------------------------------------------------------ utilidades de malha */
   function addColors(geom, r, g, b) {
     const n = geom.attributes.position.count;
@@ -179,9 +196,30 @@
       this.scene.add(this.water);
     }
 
+    // ciclo contínuo: hora 0..24 -> mistura noite / entardecer / dia e posição do sol
+    setTimeOfDay(h) {
+      const th = ((h - 6) / 12) * Math.PI;
+      const elev = Math.sin(th);
+      const day = M.smoothstep(0.12, 0.45, elev);
+      const night = 1 - M.smoothstep(-0.15, 0.05, elev);
+      let p = mixPreset(PRESETS.dusk, PRESETS.day, day);
+      p = mixPreset(p, PRESETS.night, night);
+      const az = Math.cos(th);
+      p.sun = elev > -0.05 ? [az * 0.9, Math.max(0.06, elev), 0.35] : PRESETS.night.sun;
+      const key = Math.round(h * 20);
+      if (key === this.todKey) return;
+      this.todKey = key;
+      this.night = night;
+      this.applyPreset(p, 'tod');
+    }
+
     setPreset(name) {
-      const p = PRESETS[name] || PRESETS.day;
-      this.presetName = name;
+      this.todKey = null;
+      this.night = name === 'night' ? 1 : 0;
+      this.applyPreset(PRESETS[name] || PRESETS.day, name);
+    }
+
+    applyPreset(p, name) {
       this.preset = p;
       const pos = this.skyGeo.attributes.position, col = this.skyGeo.attributes.color;
       const sd = new THREE.Vector3(p.sun[0], p.sun[1], p.sun[2]).normalize();
@@ -202,7 +240,8 @@
       this.hemi.color.setHex(p.hemiSky); this.hemi.groundColor.setHex(p.hemiGround); this.hemi.intensity = p.hemiI;
       this.waterMat.color.setHex(p.water);
       this.cloudMat.color.setHex(p.cloud);
-      this.cloudMat.emissive.setHex(name === 'dusk' ? 0x3a1d12 : 0x2a2f38);
+      this.cloudMat.emissive.setHex(name === 'dusk' ? 0x3a1d12 : name === 'tod' ? new THREE.Color(0x2a2f38).multiplyScalar(1 - (this.night || 0) * 0.8).getHex() : 0x2a2f38);
+      this.sunSprite.visible = !(this.night > 0.6);
     }
 
     setQuality(q) {

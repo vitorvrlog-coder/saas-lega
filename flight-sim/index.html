@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#05080c">
-<title>Falcão Simulador de Voo</title>
+<title>Falcão: Sobrevivência</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -36,6 +36,7 @@
     <button id="tb-cam">CÂM</button><button id="tb-view">VISTA</button>
     <button id="tb-dest">DEST</button><button id="btn-mobile-pause">II</button>
     <button id="tb-rl">◀ LEME</button><button id="tb-rr">LEME ▶</button>
+    <button id="tb-exit">SAIR</button>
   </div>
 </div>
 
@@ -55,14 +56,16 @@
   <div class="row"><button class="btn primary" id="crash-restart">REINICIAR VOO</button><button class="btn" id="crash-menu">MENU PRINCIPAL</button></div>
 </div>
 
-<div id="loading"><div class="box"><div class="small">CARREGANDO REGIÃO</div><div class="bar"><div id="load-bar"></div></div><p class="dim">Gerando relevo, cidades e aeroportos…</p></div></div>
+<div id="loading"><div class="box"><div class="small" id="load-title">CARREGANDO REGIÃO</div><div class="bar"><div id="load-bar"></div></div><p class="dim">Gerando relevo, cidades e aeroportos…</p></div></div>
 
 <!-- Menus -->
 <div id="menu-layer" class="show">
   <section class="screen show" id="scr-main">
-    <div class="brand"><span class="tag">SIMULADOR DE VOO · MUNDO ABERTO</span><h1>FALCÃO</h1><p class="dim">Acelere, decole, voe livremente e pouse. Física de voo em tempo real.</p></div>
+    <div class="brand"><span class="tag">MUNDO ABERTO · SOBREVIVÊNCIA · SIMULADOR DE VOO</span><h1>FALCÃO</h1><p class="dim">Explore a Vila Esperança, sobreviva aos mortos, conquiste aliados — e, quando quiser, decole no caça do aeroporto.</p></div>
     <div class="menu">
-      <button class="btn primary" id="btn-start">INICIAR VOO</button>
+      <button class="btn primary" id="btn-continue" hidden>CONTINUAR</button>
+      <button class="btn primary" id="btn-new">NOVO JOGO</button>
+      <button class="btn" id="btn-start">VOO LIVRE</button>
       <button class="btn" id="btn-aircraft">ESCOLHER AERONAVE</button>
       <button class="btn" id="btn-controls">CONTROLES</button>
       <button class="btn" id="btn-settings">CONFIGURAÇÕES</button>
@@ -99,6 +102,14 @@
       <h2>CONTROLES</h2>
       <div class="cols">
         <div>
+          <h4>A pé (sobrevivência)</h4>
+          <ul class="plain">
+            <li><b>WASD</b> andar · <b>Shift</b> correr · <b>C</b> agachar · <b>Espaço</b> pular</li>
+            <li><b>Mouse</b> câmera · <b>clique esquerdo</b> atacar/atirar · <b>clique direito</b> mirar</li>
+            <li><b>E</b> interagir (portas, armários, pessoas, janelas, picape, caça) · <b>R</b> recarregar · <b>Q</b> curar</li>
+            <li><b>Tab/I</b> mochila · <b>M</b> mapa e diário · <b>G</b> grupo · <b>B</b> base · <b>F</b> lanterna · <b>1–5</b> armas · <b>P/Esc</b> pausa</li>
+            <li>No caça: <b>X</b> sai da aeronave (parada no solo).</li>
+          </ul>
           <h4>Mouse e manche</h4>
           <ul class="plain">
             <li><b>Clique no jogo</b> captura o mouse (Pointer Lock). <b>Esc</b> libera e abre o menu.</li>
@@ -134,6 +145,8 @@
           <label>Horário<select id="set-time"><option value="day">Dia</option><option value="dusk">Entardecer</option></select></label>
           <label>Campo de visão <output id="set-fov-v"></output><input id="set-fov" type="range" min="55" max="100" step="1"></label>
           <label>Volume <output id="set-volume-v"></output><input id="set-volume" type="range" min="0" max="1" step="0.05"></label>
+          <label class="check"><input id="set-voices" type="checkbox"> Vozes dos personagens (síntese de voz)</label>
+          <label>Duração do dia no modo sobrevivência<select id="set-day"><option value="12">12 minutos</option><option value="24">24 minutos</option><option value="48">48 minutos</option></select></label>
         </div>
       </div>
       <div class="row"><button class="btn" data-back>VOLTAR</button></div>
@@ -145,6 +158,7 @@
       <h2 id="pause-title">PAUSADO</h2>
       <div class="menu">
         <button class="btn primary" id="btn-resume">CONTINUAR</button>
+        <button class="btn" id="btn-save" hidden>SALVAR JOGO</button>
         <button class="btn" id="btn-restart">REINICIAR VOO</button>
         <button class="btn" id="btn-pause-controls">CONTROLES</button>
         <button class="btn" id="btn-pause-settings">CONFIGURAÇÕES</button>
@@ -166,6 +180,13 @@
 <script src="src/controls.js"></script>
 <script src="src/audio.js"></script>
 <script src="src/hud.js"></script>
+<script src="src/town.js"></script>
+<script src="src/items.js"></script>
+<script src="src/sim.js"></script>
+<script src="src/dialogue.js"></script>
+<script src="src/humanoid.js"></script>
+<script src="src/townRender.js"></script>
+<script src="src/foot.js"></script>
 <script src="src/main.js"></script>
 </body>
 </html>

@@ -14,7 +14,7 @@
   const defaults = {
     sens: 1.0, deadzone: 0.04, invertY: false, center: 0.35,
     volume: 0.6, quality: coarse ? 'low' : 'medium', shadows: null, time: 'day', units: 'metric',
-    fov: 72, startAirport: 'LVV', startPos: 'runway', bindings: {},
+    fov: 72, startAirport: 'LVV', startPos: 'runway', bindings: {}, voices: true, dayLength: 24,
   };
 
   let data = Object.assign({}, defaults);

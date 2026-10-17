@@ -131,3 +131,94 @@ ul.plain { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; col
 @media (max-height: 520px) { .brand h1 { font-size: 52px; } .menu { grid-template-columns: 1fr 1fr; width: min(92vw, 520px); } .foot { display: none; } .btn { padding: 10px 12px; } }
 @media (max-height: 520px) and (orientation: landscape) { body.touch { --stick: 104px; } #touchbar { grid-template-columns: repeat(3, 58px); bottom: calc(10px + env(safe-area-inset-bottom)); right: 86px; } #touchbar button { height: 32px; font-size: 11px; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ======================================================= modo sobrevivência (a pé) */
+#foot-ui { position: fixed; inset: 0; pointer-events: none; display: none; z-index: 4; font-family: var(--sans); }
+#foot-ui.on { display: block; }
+.fu-bars { position: absolute; left: 14px; top: calc(12px + env(safe-area-inset-top)); width: min(250px, 46vw); display: grid; gap: 5px; }
+.fu-bar { position: relative; height: 16px; background: rgba(5,10,14,0.65); border: 1px solid rgba(255,255,255,0.12); border-radius: 4px; overflow: hidden; }
+.fu-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: #5fd38a; transition: width .3s; }
+.fu-bar span { position: relative; z-index: 1; font: 700 10px var(--mono); letter-spacing: .14em; padding-left: 6px; line-height: 16px; color: #fff; text-shadow: 0 1px 2px #000; }
+.fu-bar.food i { background: #e0a040; } .fu-bar.water i { background: #4aa8e8; } .fu-bar.stam i { background: #c8d0d8; }
+.fu-bar.inf i { background: #9acd32; } .fu-bar.crit i { background: #ff4a3d; animation: pulse 1s infinite alternate; }
+@keyframes pulse { from { opacity: .6 } to { opacity: 1 } }
+.fu-flag { font: 700 11px var(--mono); color: #ffc83a; text-shadow: 0 1px 2px #000; letter-spacing: .06em; }
+.fu-clock { position: absolute; right: 14px; top: calc(12px + env(safe-area-inset-top)); text-align: right; color: #fff; text-shadow: 0 1px 3px #000; }
+.fu-clock b { display: block; font: 700 16px var(--mono); } .fu-clock small { font: 11px var(--mono); color: #cfe; letter-spacing: .1em; }
+.fu-cross { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: rgba(255,255,255,0.7); box-shadow: 0 0 2px #000; }
+.fu-cross.gun.aim { width: 22px; height: 22px; margin: -11px; background: none; border: 2px solid rgba(255,255,255,0.85); }
+.fu-prompt { position: absolute; left: 50%; bottom: 22%; transform: translateX(-50%); padding: 7px 14px; border-radius: 8px; background: rgba(5,10,14,0.75); color: #fff; font-size: 14px; opacity: 0; transition: opacity .15s; white-space: nowrap; }
+.fu-prompt.on { opacity: 1; } .fu-prompt kbd { font: 700 12px var(--mono); padding: 1px 6px; border: 1px solid #aaa; border-radius: 4px; margin-right: 6px; }
+.fu-weapon { position: absolute; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); color: #fff; font: 14px var(--mono); text-shadow: 0 1px 3px #000; text-align: right; }
+.fu-weapon b { font-size: 20px; color: #ffd34d; }
+.fu-team { position: absolute; right: 14px; top: 70px; display: grid; gap: 4px; width: 170px; }
+.fu-team div { position: relative; background: rgba(5,10,14,0.6); border-radius: 4px; padding: 3px 6px; color: #dff; font-size: 12px; overflow: hidden; }
+.fu-team i { position: absolute; left: 0; bottom: 0; height: 2px; background: #7ec8ff; }
+.fu-team small { float: right; color: #9ab; }
+.fu-toasts { position: absolute; left: 50%; top: 12%; transform: translateX(-50%); display: grid; gap: 6px; width: min(560px, 90vw); }
+.fu-toast { padding: 7px 12px; border-radius: 8px; background: rgba(5,10,14,0.78); color: #eef; font-size: 13px; border-left: 3px solid #6dffa8; transition: opacity .6s, transform .6s; text-align: center; }
+.fu-toast.warn { border-color: #ffc83a; } .fu-toast.death { border-color: #ff4a3d; } .fu-toast.quest { border-color: #ffd34d; } .fu-toast.event { border-color: #7ec8ff; } .fu-toast.faction { border-color: #c77dff; } .fu-toast.base { border-color: #7ec8ff; } .fu-toast.social { border-color: #ff8fb8; }
+.fu-toast.out { opacity: 0; transform: translateY(-6px); }
+.fu-hit { position: absolute; inset: 0; background: radial-gradient(circle, transparent 45%, rgba(200,0,0,0.85)); opacity: 0; }
+.fu-labels { position: absolute; inset: 0; overflow: hidden; }
+.fu-label { position: absolute; transform: translate(-50%, -100%); text-align: center; font: 700 12px var(--sans); text-shadow: 0 1px 3px #000; white-space: nowrap; }
+.fu-bubble { max-width: 240px; white-space: normal; margin-bottom: 3px; padding: 5px 9px; border-radius: 10px; background: rgba(255,255,255,0.92); color: #111; font-weight: 500; font-size: 12px; text-shadow: none; }
+/* painéis */
+.fu-panel { position: absolute; inset: 0; z-index: 5; display: none; place-items: center; background: rgba(2,5,8,0.55); pointer-events: auto; padding: 12px; }
+.fu-panel.on { display: grid; }
+.fu-panel-in { width: min(820px, 96vw); max-height: 92vh; overflow: auto; background: rgba(10,16,22,0.96); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 16px 18px; color: #e8eef2; }
+.fu-ph { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px; margin-bottom: 10px; }
+.fu-ph h3 { margin: 0; font: 700 18px var(--mono); letter-spacing: .1em; color: #6dffa8; }
+.fu-ph small { color: #9ab; font-size: 12px; }
+.fu-x { margin-left: auto; background: none; border: 0; color: #9ab; font-size: 26px; cursor: pointer; line-height: 1; }
+.fu-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.fu-tabs button, .fu-row button, .fu-ibtn button, .fu-opts button { appearance: none; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.05); color: #e8eef2; border-radius: 7px; padding: 6px 11px; font: 13px var(--sans); cursor: pointer; }
+.fu-tabs button.on, .fu-ibtn button.on { background: #2a6a4a; border-color: #6dffa8; }
+.fu-row button.pri { background: #3cc47c; color: #031; border-color: transparent; font-weight: 700; }
+button:disabled { opacity: .4; cursor: default; }
+.fu-list { display: grid; gap: 4px; }
+.fu-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 7px; background: rgba(255,255,255,0.035); flex-wrap: wrap; }
+.fu-item.sel { background: rgba(60,196,124,0.18); }
+.fu-item b { font-weight: 600; font-size: 14px; } .fu-item em { color: #ffd34d; font-style: normal; font-size: 13px; } .fu-item small { color: #9ab; font-size: 12px; }
+.fu-ibtn { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; }
+.fu-ibtn button { padding: 4px 9px; font-size: 12px; }
+.cat { width: 8px; height: 8px; border-radius: 2px; background: #888; flex: none; }
+.cat.comida { background: #e0a040; } .cat.agua { background: #4aa8e8; } .cat.remedio { background: #ff6b8b; } .cat.arma { background: #ff4a3d; } .cat.municao { background: #ffd34d; } .cat.material { background: #b08860; } .cat.ferramenta { background: #9acd32; } .cat.chave { background: #c77dff; } .cat.nota { background: #ddd; }
+.fu-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+.fu-say { margin: 10px 0; padding: 12px 14px; border-radius: 10px; background: rgba(255,255,255,0.05); font-size: 15px; line-height: 1.5; }
+.fu-opts { display: grid; gap: 6px; }
+.fu-opts button { text-align: left; padding: 9px 12px; font-size: 14px; }
+.fu-opts button:hover, .fu-row button:hover, .fu-ibtn button:hover { border-color: #6dffa8; }
+.fu-meters { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: #9ab; }
+.fu-meters label { display: flex; align-items: center; gap: 6px; }
+.fu-meters i { display: inline-block; width: 90px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #6dffa8 var(--v), rgba(255,255,255,0.1) var(--v)); }
+.fu-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.fu-col h4 { margin: 0 0 6px; font: 700 12px var(--mono); letter-spacing: .1em; color: #ffd34d; }
+.fu-col { max-height: 50vh; overflow: auto; }
+.fu-bal { font: 13px var(--mono); color: #ff8a7a; } .fu-bal.ok { color: #6dffa8; }
+.fu-q { padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,0.04); border-left: 3px solid #ffd34d; }
+.fu-q.done { border-color: #6dffa8; opacity: .7; } .fu-q.failed { border-color: #ff4a3d; opacity: .6; }
+.fu-q p { margin: 4px 0 0; font-size: 13px; color: #cdd; } .fu-q small { color: #9ab; margin-left: 8px; }
+.fu-log div { font-size: 13px; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05); } .fu-log small { color: #8a9; font-family: var(--mono); }
+.fu-log .death { color: #ff9a8a; } .fu-log .event { color: #9fd8ff; } .fu-log .quest { color: #ffe08a; } .fu-log .faction { color: #d8a8ff; } .fu-log .social { color: #ffb8d0; }
+.fu-rep { margin-left: auto; font: 12px var(--mono); } .fu-rep.ally { color: #6dffa8; } .fu-rep.enemy { color: #ff6b5f; }
+.fu-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fu-stats div { padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.04); font-size: 12px; color: #9ab; }
+.fu-stats b { display: block; font: 700 20px var(--mono); color: #fff; }
+.fu-note { padding: 18px; border-radius: 8px; background: #efe6cf; color: #2a2418; font: italic 16px Georgia, serif; line-height: 1.6; }
+.fu-death { text-align: center; padding: 20px; } .fu-death h2 { font: 700 42px var(--mono); color: #ff4a3d; letter-spacing: .12em; margin: 0 0 10px; }
+#fu-map { width: 100%; max-width: 640px; aspect-ratio: 1; display: block; margin: 0 auto; border-radius: 8px; }
+.small { font-size: 12px; }
+/* toque */
+.fu-touch { display: none; }
+#foot-ui.touch .fu-touch { display: block; }
+#foot-ui.touch .fu-weapon { bottom: auto; top: 64px; }
+.fu-joy { position: absolute; left: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); width: 130px; height: 130px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.18); pointer-events: auto; touch-action: none; }
+.fu-joy-knob { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px; border-radius: 50%; background: rgba(255,255,255,0.45); }
+.fu-btns { position: absolute; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: repeat(4, 58px); gap: 6px; pointer-events: auto; }
+.fu-btns button { height: 42px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(8,14,20,0.6); color: #e8eef2; font: 700 10px var(--mono); touch-action: none; }
+.fu-btns button.big { background: rgba(160,40,30,0.7); } .fu-btns button.hl { background: rgba(40,120,80,0.7); }
+.fu-btns button.on { border-color: #6dffa8; color: #6dffa8; }
+#foot-ui.touch .fu-prompt { bottom: 200px; }
+@media (max-width: 700px) { .fu-cols { grid-template-columns: 1fr; } .fu-stats { grid-template-columns: repeat(2, 1fr); } .fu-btns { grid-template-columns: repeat(4, 50px); } .fu-btns button { height: 38px; } .fu-team { top: 120px; width: 130px; } }
+#tb-exit { display: none; } body.touch #tb-exit { display: block; }
