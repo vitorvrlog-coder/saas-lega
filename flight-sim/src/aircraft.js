@@ -227,10 +227,9 @@
         this.group.add(mesh);
         return mesh;
       };
-      add(new THREE.BoxGeometry(7, 1.0, 0.4), dark, 0, -0.78, -1.25);              // fundo do painel
-      add(new THREE.BoxGeometry(3.6, 0.07, 0.4), dark, 0, -0.2, -0.9, 0.22);      // protetor de reflexo
-      add(new THREE.BoxGeometry(1.5, 0.7, 0.9), mid, -1.65, -0.62, -0.72);          // consoles laterais
-      add(new THREE.BoxGeometry(1.5, 0.7, 0.9), mid, 1.65, -0.62, -0.72);
+      add(new THREE.BoxGeometry(7, 1.0, 0.5), dark, 0, -0.8, -1.6);               // fundo do painel (atrás do painel)
+      add(new THREE.BoxGeometry(1.5, 0.7, 0.5), mid, -1.65, -0.62, -1.2);           // consoles laterais
+      add(new THREE.BoxGeometry(1.5, 0.7, 0.5), mid, 1.65, -0.62, -1.2);
       // arcos da capota
       add(new THREE.BoxGeometry(0.06, 2.2, 0.06), dark, -1.3, 0.2, -0.85, 0, -0.2);
       add(new THREE.BoxGeometry(0.06, 2.2, 0.06), dark, 1.3, 0.2, -0.85, 0, 0.2);

@@ -80,3 +80,11 @@ Clique na tela para capturar o mouse. Se o navegador não permitir Pointer Lock,
 - **Pouso:** a avaliação (PERFEITO / SEGURO / BRUSCO / ACIDENTE) vem da razão de descida, velocidade e inclinação no toque, alinhamento e desvio do eixo da pista, configuração e posição; acidentes destroem a aeronave.
 
 Limitações conhecidas: sem vento/turbulência, sem consumo de combustível, árvores não colidem, sem multijogador, terreno por ruído (não dados reais), uma única aeronave jogável.
+
+## Testes realizados
+
+Física (Node, sem navegador — `FS.FlightModel` isolado): sinais de comando (rolagem à direita → inclinação positiva, puxar → arfagem positiva, leme à direita → rumo aumenta), taxas de rolagem por velocidade, g máximo por velocidade, velocidade máxima (≈ 1 260 km/h), decolagem completa (liftoff ≈ 378 km/h após ≈ 520 m), estol e recuperação, pouso automatizado com avaliação, frenagem até parar, táxi com esterçamento, pouso de barriga, colisão com edifício, inércia ao soltar os comandos.
+
+Navegador (Chromium headless com WebGL por software): abertura sem erros de console, menus, decolagem real via teclado (R, W, setas, F), quatro câmeras, cockpit com instrumentos, pausa congelando a simulação, acidente (painel + reinício), pouso com painel de avaliação e frenagem até parar, layout em celular vertical/horizontal com toque, qualidade Alta com sombras e horário de entardecer.
+
+Não verificados por falta de hardware no ambiente de teste: taxa de quadros em GPU real/celulares, som (WebAudio) e captura real do mouse (Pointer Lock).
