@@ -44,11 +44,11 @@ export function parseDecimalBR(texto: string): string | null {
   return new Decimal(s).toString();
 }
 
-/** String decimal canônica → texto para edição ("1234.5" → "1.234,50"). */
+/** String decimal canônica → texto para edição ("1234.5" → "1.234,50"). `casas` é o mínimo de decimais (máximo 2). */
 export function decimalParaInput(v: string | null | undefined, casas = 2): string {
   const d = toDec(v);
   if (d === null) return "";
-  return d.toNumber().toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas });
+  return d.toNumber().toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: Math.max(casas, 2) });
 }
 
 export function formatData(iso: string | null | undefined, vazio = "—"): string {
