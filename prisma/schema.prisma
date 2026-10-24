@@ -1,0 +1,206 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum StatusLote {
+  triagem
+  avaliando
+  dar_lance
+  descartado
+  perdido
+  arrematado
+  vendido
+}
+
+enum Origem {
+  seguradora
+  financeira
+  locadora
+  orgao_publico
+  outro
+}
+
+enum SituacaoDoc {
+  pendente
+  verificada
+  bloqueada
+}
+
+enum Sistema {
+  motor
+  arrefecimento
+  eletrica
+  funilaria
+  estrutura
+  suspensao_direcao
+  transmissao
+  interior
+  seguranca
+  outros
+}
+
+enum SituacaoItem {
+  ausente
+  danificado
+  reparar
+  inspecionar
+  ok
+}
+
+enum Informacao {
+  observado
+  inferido
+}
+
+enum TipoPeca {
+  original
+  paralela
+  usada
+}
+
+model Parametros {
+  id           Int     @id @default(1)
+  horaOficina  Decimal @default(150) @db.Decimal(12, 2)
+  lucroMinimo  Decimal @default(15000) @db.Decimal(12, 2)
+  comissaoPct  Decimal @default(5) @db.Decimal(6, 2)
+  taxasLeilao  Decimal @default(2000) @db.Decimal(12, 2)
+  transporte   Decimal @default(2500) @db.Decimal(12, 2)
+  documentacao Decimal @default(1500) @db.Decimal(12, 2)
+  custosVenda  Decimal @default(2000) @db.Decimal(12, 2)
+  custoCapital Decimal @default(0) @db.Decimal(12, 2)
+  tributos     Decimal @default(0) @db.Decimal(12, 2)
+}
+
+model Lote {
+  id            String     @id @default(cuid())
+  nome          String
+  leiloeiro     String?
+  numeroLote    String?
+  link          String?
+  marca         String?
+  modelo        String?
+  versao        String?
+  ano           Int?
+  motorCambio   String?
+  km            Int?
+  origem        Origem?
+  tipoDano      String?
+  condicaoEdital String?
+  lanceAtual    Decimal?   @db.Decimal(12, 2)
+  dataLeilao    DateTime?  @db.Date
+  cidadePatio   String?
+  observacoes   String?
+
+  status          StatusLote @default(triagem)
+  motivoDescarte  String?
+  valorPerdido    Decimal?   @db.Decimal(12, 2)
+
+  docSituacao SituacaoDoc @default(pendente)
+  docNotas    String?
+
+  // Mercado
+  fipe          Decimal? @db.Decimal(12, 2)
+  vendaProvavel Decimal? @db.Decimal(12, 2)
+  vendaRapida   Decimal? @db.Decimal(12, 2)
+  notasVenda    String?
+
+  // Custos do lote (vazio = padrão dos Parâmetros)
+  lucroMinimo  Decimal? @db.Decimal(12, 2)
+  comissaoPct  Decimal? @db.Decimal(6, 2)
+  taxasLeilao  Decimal? @db.Decimal(12, 2)
+  transporte   Decimal? @db.Decimal(12, 2)
+  documentacao Decimal? @db.Decimal(12, 2)
+  custosVenda  Decimal? @db.Decimal(12, 2)
+  custoCapital Decimal? @db.Decimal(12, 2)
+  tributos     Decimal? @db.Decimal(12, 2)
+
+  // Pós-compra (real — nunca sobrescreve o previsto)
+  lanceArrematado   Decimal?  @db.Decimal(12, 2)
+  dataArremate      DateTime? @db.Date
+  taxasReais        Decimal?  @db.Decimal(12, 2)
+  transporteReal    Decimal?  @db.Decimal(12, 2)
+  documentacaoReal  Decimal?  @db.Decimal(12, 2)
+  outrosGastos      Decimal?  @db.Decimal(12, 2)
+  precoVenda        Decimal?  @db.Decimal(12, 2)
+  dataVenda         DateTime? @db.Date
+  custosVendaReais  Decimal?  @db.Decimal(12, 2)
+
+  itens  ItemReparo[]
+  riscos Risco[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ItemReparo {
+  id            String       @id @default(cuid())
+  loteId        String
+  lote          Lote         @relation(fields: [loteId], references: [id], onDelete: Cascade)
+  ordem         Int          @default(0)
+  sistema       Sistema      @default(outros)
+  descricao     String
+  situacao      SituacaoItem @default(inspecionar)
+  informacao    Informacao   @default(observado)
+  quantidade    Decimal      @default(1) @db.Decimal(8, 2)
+  precoOriginal Decimal?     @db.Decimal(12, 2)
+  precoParalela Decimal?     @db.Decimal(12, 2)
+  precoUsada    Decimal?     @db.Decimal(12, 2)
+  tipoProvavel  TipoPeca?
+  horasMO       Decimal?     @db.Decimal(8, 2)
+  agregados     Decimal?     @db.Decimal(12, 2)
+  fontePreco    String?
+  validado      Boolean      @default(false)
+  custoReal     Decimal?     @db.Decimal(12, 2)
+
+  @@index([loteId])
+}
+
+model Risco {
+  id        String   @id @default(cuid())
+  loteId    String
+  lote      Lote     @relation(fields: [loteId], references: [id], onDelete: Cascade)
+  ordem     Int      @default(0)
+  nome      String
+  chancePct Decimal? @db.Decimal(6, 2)
+  custo     Decimal? @db.Decimal(12, 2)
+
+  @@index([loteId])
+}
+
+model Cotacao {
+  id         String   @id @default(cuid())
+  peca       String
+  modelo     String?
+  tipo       TipoPeca
+  preco      Decimal  @db.Decimal(12, 2)
+  fornecedor String
+  link       String?
+  data       DateTime @db.Date
+  observacao String?
+  createdAt  DateTime @default(now())
+
+  @@index([peca, modelo, tipo])
+}
+
+model KitDano {
+  id    String        @id @default(cuid())
+  nome  String
+  ordem Int           @default(0)
+  itens KitDanoItem[]
+}
+
+model KitDanoItem {
+  id         String  @id @default(cuid())
+  kitId      String
+  kit        KitDano @relation(fields: [kitId], references: [id], onDelete: Cascade)
+  ordem      Int     @default(0)
+  sistema    Sistema @default(outros)
+  descricao  String
+  quantidade Decimal @default(1) @db.Decimal(8, 2)
+}

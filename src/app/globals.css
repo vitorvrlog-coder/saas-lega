@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Tabelas largas rolam na horizontal no celular */
+.tabela-rolavel {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tabela-rolavel table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.tabela-rolavel th {
+  white-space: nowrap;
+}
